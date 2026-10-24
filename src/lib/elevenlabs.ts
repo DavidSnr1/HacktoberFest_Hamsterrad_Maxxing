@@ -23,9 +23,14 @@ function getApiKey() {
   return apiKey;
 }
 
+/** Voice of the interviewer; part of every cache key for spoken lines. */
+export function getVoiceId() {
+  return process.env.ELEVENLABS_VOICE_ID?.trim() || DEFAULT_VOICE_ID;
+}
+
 /** Text-to-speech for the interviewer's voice. Returns MP3 bytes. */
 export async function synthesizeSpeech(text: string): Promise<ArrayBuffer> {
-  const voiceId = process.env.ELEVENLABS_VOICE_ID?.trim() || DEFAULT_VOICE_ID;
+  const voiceId = getVoiceId();
   const url = new URL(`/v1/text-to-speech/${encodeURIComponent(voiceId)}`, API_BASE);
   url.searchParams.set("output_format", "mp3_44100_128");
 

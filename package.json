@@ -10,7 +10,8 @@
     "db:test": "node supabase/tests/rls.test.mjs",
     "db:types": "npx supabase@latest gen types typescript --project-id \"$SUPABASE_PROJECT_ID\" --schema public > src/lib/supabase/database.types.ts",
     "feedback:try": "tsx --conditions=react-server --env-file=.env.local scripts/try-feedback.mts",
-    "db:migrate": "node --env-file=.env.local scripts/db-migrate.mts"
+    "db:migrate": "node --env-file=.env.local scripts/db-migrate.mts",
+    "videos:generate": "tsx --conditions=react-server --env-file=.env.local scripts/generate-interviewer-videos.mts"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

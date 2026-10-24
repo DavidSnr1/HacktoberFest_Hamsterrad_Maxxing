@@ -1,6 +1,6 @@
 import "server-only";
 import { cacheLife } from "next/cache";
-import { synthesizeSpeech } from "@/lib/elevenlabs";
+import { getVoiceId, synthesizeSpeech } from "@/lib/elevenlabs";
 
 /**
  * Interviewer lines are fixed texts, so each one is synthesized once and then
@@ -17,6 +17,5 @@ async function cachedSpeech(text: string, voiceKey: string): Promise<string> {
 }
 
 export async function getSpeechAudio(text: string): Promise<Buffer> {
-  const voiceKey = process.env.ELEVENLABS_VOICE_ID?.trim() || "default";
-  return Buffer.from(await cachedSpeech(text, voiceKey), "base64");
+  return Buffer.from(await cachedSpeech(text, getVoiceId()), "base64");
 }

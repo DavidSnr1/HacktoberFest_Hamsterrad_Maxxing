@@ -40,3 +40,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local-only files (e.g. interviewer photos for npm run videos:generate)
+/private/

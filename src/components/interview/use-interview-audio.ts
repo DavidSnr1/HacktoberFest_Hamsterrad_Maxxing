@@ -87,9 +87,10 @@ export function useInterviewAudio() {
     if (!engine) return;
     await engine.context.resume();
     engine.player.src = url;
-    setIsSpeaking(true);
     try {
       await new Promise<void>((resolve, reject) => {
+        // Set on "playing", not before: the interviewer video starts with it.
+        engine.player.onplaying = () => setIsSpeaking(true);
         engine.player.onended = () => resolve();
         engine.player.onerror = () => reject(new Error("playback failed"));
         engine.player.play().catch(reject);

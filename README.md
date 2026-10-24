@@ -57,6 +57,7 @@ Die übrigen Variablen (Gemini, ElevenLabs) werden in späteren Schritten gebrau
 | `GEMINI_API_KEY`, `LLM_MODEL_LIVE`, `LLM_MODEL_QUALITY` | Gemma 4 für Feedback und Lebenslauf | 4 |
 | `ELEVENLABS_API_KEY` | Fragen vorlesen (Text to Speech), Antworten transkribieren (Speech to Text) | 3 |
 | `ELEVENLABS_VOICE_ID` (optional) | Andere Stimme für die Interviewerin | 3 |
+| `DID_API_KEY` (optional) | Sprechendes Interviewer-Video aus einem Foto (D-ID) | – |
 
 ## 3. Datenbank einrichten
 
@@ -190,3 +191,25 @@ Die Fragen stehen in `src/lib/prompts/interviewer-consulting.ts` (Text, Bedenkze
 5. Dev-Server neu starten.
 
 Ein ElevenLabs-Agent im Dashboard ist nicht nötig.
+
+## Interviewer-Video (D-ID, optional)
+
+Statt der gezeichneten Interviewerin kann ein echtes Foto sprechen. Pro vorgelesener Zeile (Begrüßung, Fragen, Abschluss) wird **einmalig** ein kurzes Video erzeugt, in dem das Foto lippensynchron die ElevenLabs-Stimme spricht. Die Clips liegen in Supabase Storage und werden im Interview stumm zur Stimme abgespielt. Im Interview entstehen dadurch keine Wartezeit und keine Kosten.
+
+> Nur Fotos von Personen verwenden, die der Nutzung schriftlich zugestimmt haben. Das Video ist in der App als „KI-generiertes Video" gekennzeichnet. Das Foto wird an D-ID übertragen; wir speichern es nicht.
+
+1. Auf [d-id.com](https://www.d-id.com) ein Konto anlegen (Testguthaben reicht für die rund 7 Clips eines Tracks; im Gratis-Tarif ggf. mit Wasserzeichen).
+2. Im D-ID Studio: Profil → **API Keys** → **Create**. Den Key (Form `benutzer:passwort`) in `.env.local` eintragen: `DID_API_KEY=...`
+3. Foto in den Ordner `private/` legen (steht in `.gitignore`, landet nicht im Git). JPG oder PNG, Gesicht frontal und gut ausgeleuchtet, max. 10 MB.
+4. Clips erzeugen (dauert pro Clip ca. 30–90 Sekunden):
+
+   ```bash
+   npm run videos:generate -- --track consulting --photo private/interviewer.jpg
+   ```
+
+   Das Skript legt beim ersten Mal den privaten Bucket `interviewer-videos` an. Vorhandene Clips werden übersprungen.
+5. Interview neu laden: Die Interviewerin spricht jetzt als Video.
+
+- **Fragentext oder Stimme geändert?** Skript erneut ausführen, es erzeugt nur die betroffenen Clips neu. Bis dahin erscheint für diese Zeilen wieder die gezeichnete Interviewerin.
+- **Neues Foto?** Mit `--force` alle Clips des Tracks neu erzeugen.
+- Name und Rolle der Interviewerin stehen in `src/lib/interview/tracks.ts`.

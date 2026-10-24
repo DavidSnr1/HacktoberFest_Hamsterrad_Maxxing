@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
 import { InterviewRoom } from "@/components/interview/interview-room";
+import { getInterviewerVideoUrls } from "@/lib/interview/interviewer-video";
 import { getInterview } from "@/lib/interview/queries";
 import { getScript } from "@/lib/interview/script";
 import { transcriptSchema } from "@/lib/schemas/interview";
@@ -25,6 +26,7 @@ async function InterviewLoader({ params }: Pick<PageProps<"/interviews/[id]">, "
   const script = getScript(interview.track);
   if (!script) notFound();
   const transcript = transcriptSchema.safeParse(interview.transcript);
+  const videoUrls = await getInterviewerVideoUrls(interview.track);
 
   return (
     <InterviewRoom
@@ -32,6 +34,7 @@ async function InterviewLoader({ params }: Pick<PageProps<"/interviews/[id]">, "
       track={interview.track}
       script={script}
       initialTranscript={transcript.success ? transcript.data : []}
+      videoUrls={videoUrls}
     />
   );
 }

@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import { apiError } from "@/lib/api";
 import { ElevenLabsError } from "@/lib/elevenlabs";
+import { getClipAudio } from "@/lib/interview/interviewer-video";
 import { getSpeechText } from "@/lib/interview/script";
 import { getSpeechAudio } from "@/lib/interview/speech-cache";
 import { trackSchema } from "@/lib/schemas/interview";
@@ -18,10 +19,11 @@ export async function GET(request: NextRequest) {
   const track = trackSchema.safeParse(request.nextUrl.searchParams.get("track"));
   const item = request.nextUrl.searchParams.get("item") ?? "";
   const text = track.success ? getSpeechText(track.data, item) : null;
-  if (!text) return apiError(404, "Diese Frage gibt es nicht.");
+  if (!track.success || !text) return apiError(404, "Diese Frage gibt es nicht.");
 
   try {
-    const audio = await getSpeechAudio(text);
+    // A line with an interviewer video must play the MP3 the video was lip-synced to.
+    const audio = (await getClipAudio(track.data, text)) ?? (await getSpeechAudio(text));
     return new Response(new Uint8Array(audio), {
       headers: {
         "Content-Type": "audio/mpeg",

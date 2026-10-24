@@ -47,14 +47,18 @@ type InterviewRoomProps = {
   track: InterviewTrack;
   script: InterviewScript;
   initialTranscript: TranscriptEntry[];
+  /** Signed URLs of pre-rendered interviewer clips; lines without one show the avatar. */
+  videoUrls: Partial<Record<SpeechItem, string>>;
 };
+
+type SpeechLine = { audio: string; video?: string };
 
 async function errorMessage(response: Response, fallback: string) {
   const body = (await response.json().catch(() => null)) as ApiError | null;
   return body?.error ?? fallback;
 }
 
-export function InterviewRoom({ interviewId, track, script, initialTranscript }: InterviewRoomProps) {
+export function InterviewRoom({ interviewId, track, script, initialTranscript, videoUrls }: InterviewRoomProps) {
   const router = useRouter();
   const { interviewer, label } = TRACKS[track];
   const { questions } = script;
@@ -72,7 +76,8 @@ export function InterviewRoom({ interviewId, track, script, initialTranscript }:
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
   const [showTranscript, setShowTranscript] = useState(false);
   const lastBlobRef = useRef<Blob | null>(null);
-  const speechRef = useRef(new Map<SpeechItem, Promise<string>>());
+  const speechRef = useRef(new Map<SpeechItem, Promise<SpeechLine>>());
+  const [currentVideo, setCurrentVideo] = useState<string | null>(null);
   const aliveRef = useRef(true);
 
   const answeredIds = useMemo(
@@ -87,34 +92,54 @@ export function InterviewRoom({ interviewId, track, script, initialTranscript }:
     const speech = speechRef.current;
     return () => {
       aliveRef.current = false;
-      speech.forEach((url) => url.then(URL.revokeObjectURL, () => {}));
+      speech.forEach((line) =>
+        line.then((urls) => {
+          URL.revokeObjectURL(urls.audio);
+          if (urls.video) URL.revokeObjectURL(urls.video);
+        }, () => {}),
+      );
     };
   }, []);
 
-  /** Fetches (once) and caches the audio of an interviewer line as an object URL. */
+  /**
+   * Fetches (once) and caches an interviewer line as object URLs: the audio
+   * and, if there is one, the video. Both are fully loaded before playback,
+   * so the muted video starts in sync with the voice.
+   */
   const loadSpeech = useCallback(
     (item: SpeechItem) => {
       const cached = speechRef.current.get(item);
       if (cached) return cached;
-      const promise = fetch(`/api/elevenlabs/speech?track=${track}&item=${encodeURIComponent(item)}`).then(
-        async (response) => {
+      const videoUrl = videoUrls[item];
+      // Separate URL for lines with video: their audio is the clip's MP3, not a cached TTS rendition.
+      const audioUrl = `/api/elevenlabs/speech?track=${track}&item=${encodeURIComponent(item)}${videoUrl ? "&video=1" : ""}`;
+      const promise = Promise.all([
+        fetch(audioUrl).then(async (response) => {
           if (!response.ok) throw new Error(await errorMessage(response, "Die Sprachausgabe ist nicht erreichbar."));
           return URL.createObjectURL(await response.blob());
-        },
-      );
+        }),
+        // A missing video is not an error: the avatar is shown instead.
+        videoUrl
+          ? fetch(videoUrl)
+              .then(async (response) => (response.ok ? URL.createObjectURL(await response.blob()) : undefined))
+              .catch(() => undefined)
+          : Promise.resolve(undefined),
+      ]).then(([audio, video]): SpeechLine => ({ audio, video }));
       // Allow a retry on the next request if this one failed.
       promise.catch(() => speechRef.current.delete(item));
       speechRef.current.set(item, promise);
       return promise;
     },
-    [track],
+    [track, videoUrls],
   );
 
   /** Plays a line; if audio fails the text on screen is enough to continue. */
   const speak = useCallback(
     async (item: SpeechItem) => {
       try {
-        await audio.play(await loadSpeech(item));
+        const line = await loadSpeech(item);
+        setCurrentVideo(line.video ?? null);
+        await audio.play(line.audio);
       } catch {
         // Ignore: playback blocked or TTS unavailable for this line.
       }
@@ -380,6 +405,7 @@ export function InterviewRoom({ interviewId, track, script, initialTranscript }:
               name={interviewer.name}
               role={interviewer.role}
               isSpeaking={audio.isSpeaking}
+              videoUrl={currentVideo}
               active
               getOutputVolume={audio.getOutputVolume}
               className="h-[min(42dvh,26rem)] min-h-64 lg:h-[min(50dvh,28rem)]"
