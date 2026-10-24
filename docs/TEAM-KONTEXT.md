@@ -136,6 +136,7 @@ Neues Feature, steht noch nicht in `CLAUDE.md`. Ziel: Nutzer findet passende Ste
 
 **Rechtliches zuerst (verbindlich):**
 - **Kein** Scraping von LinkedIn, Indeed, StepStone, XING o. Ä. – deren Nutzungsbedingungen verbieten es.
+  > **Entschieden von David am 2026-10-24 (final):** Für LinkedIn, Indeed und StepStone gilt das nicht mehr. Die Adapter von Feature C sind erlaubt und standardmäßig aktiv (`JOBS_ENABLE_SCRAPED_SOURCES=false` schaltet sie ab). Bot-Schutz wird weiterhin nicht umgangen. Details: `docs/handoff/job-scraper.md`.
 - Bevorzugt offizielle/offene Quellen:
   - **Bundesagentur für Arbeit – Jobsuche-API** (öffentlich, kostenlos, große Abdeckung in DE).
   - **Arbeitnow Job Board API** (frei, ohne Key).

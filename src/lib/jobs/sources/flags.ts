@@ -1,5 +1,5 @@
-// LinkedIn, Indeed and StepStone forbid scraping in their terms (see TEAM-KONTEXT 4C).
-// These adapters are for local, non-public use only and stay off unless explicitly enabled.
+// LinkedIn, Indeed and StepStone: decided on 2026-10-24 that these adapters are allowed and on by
+// default (TEAM-KONTEXT 4C). JOBS_ENABLE_SCRAPED_SOURCES=false switches them off.
 export function scrapedSourcesEnabled(): boolean {
-  return process.env.JOBS_ENABLE_SCRAPED_SOURCES === "true";
+  return process.env.JOBS_ENABLE_SCRAPED_SOURCES !== "false";
 }

@@ -224,5 +224,5 @@ Tests: `npm run test:resume` (Logik) und `npm run db:test:resume` (RLS).
 ## Stellen-Scraper
 
 Tab „Stellen“ (`/jobs`): sucht Praktika, Werkstudentenjobs und Einstiegsstellen bei der Bundesagentur für Arbeit
-und Arbeitnow (optional Adzuna). LinkedIn, Indeed und StepStone nur lokal mit `JOBS_ENABLE_SCRAPED_SOURCES=true`.
+und Arbeitnow (optional Adzuna), dazu LinkedIn, Indeed und StepStone (abschaltbar mit `JOBS_ENABLE_SCRAPED_SOURCES=false`).
 Tests: `npm run test:jobs`, `npm run db:test:jobs`. Details: `docs/handoff/job-scraper.md`.

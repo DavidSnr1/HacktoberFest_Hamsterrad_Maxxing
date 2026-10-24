@@ -11,7 +11,7 @@ import { cleanLine, htmlToText, toIsoDate } from "../text";
 import { scrapedSourcesEnabled } from "./flags";
 import type { JobDetails, JobSource } from "./types";
 
-// HTML scraping of public result pages. Disabled unless JOBS_ENABLE_SCRAPED_SOURCES=true.
+// HTML scraping of public result pages. On unless JOBS_ENABLE_SCRAPED_SOURCES=false.
 // Indeed usually shows a "Security Check" to non-browser clients; we report that as "blocked".
 const BASE_URL = "https://de.indeed.com";
 const STATE_MARKER = 'window.mosaic.providerData["mosaic-provider-jobcards"]=';

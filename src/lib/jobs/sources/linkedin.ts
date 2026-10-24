@@ -10,7 +10,7 @@ import { cleanLine, htmlToText, toIsoDate } from "../text";
 import { scrapedSourcesEnabled } from "./flags";
 import type { JobDetails, JobSource } from "./types";
 
-// Public guest job search (no login). Disabled unless JOBS_ENABLE_SCRAPED_SOURCES=true.
+// Public guest job search (no login). On unless JOBS_ENABLE_SCRAPED_SOURCES=false.
 // LinkedIn often answers with a JS challenge or 429; we report that as "blocked" and do not work around it.
 const BASE_URL = "https://www.linkedin.com";
 // Free-text "Deutschland" is not reliable (returned US jobs); the geo id restricts results to Germany.

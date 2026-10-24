@@ -19,7 +19,7 @@ tsx@^4.23.15          # TypeScript-Unit-Tests mit node:test (löst den Alias @/ 
 # "db:test:jobs": "node --test supabase/tests/jobs.test.mjs"
 
 # --- Umgebungsvariablen (.env.local, am Ende von .env.example ergänzen) ---
-# JOBS_ENABLE_SCRAPED_SOURCES=false   # true = LinkedIn/Indeed/StepStone aktiv (nur lokal)
+# JOBS_ENABLE_SCRAPED_SOURCES=true    # Standard; false = LinkedIn/Indeed/StepStone aus
 # ADZUNA_APP_ID=                      # optional, kostenloser Key: https://developer.adzuna.com
 # ADZUNA_APP_KEY=
 #

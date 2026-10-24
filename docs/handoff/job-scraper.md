@@ -1,12 +1,12 @@
 # Übergabe: Feature C – Stellen-Scraper (`feature/job-scraper`)
 
-## ⚠️ Zuerst lesen: Abweichung von TEAM-KONTEXT 4C
+## ⚠️ Zuerst lesen: LinkedIn, Indeed und StepStone (TEAM-KONTEXT 4C)
 
-TEAM-KONTEXT 4C verbietet das Scraping von LinkedIn, Indeed und StepStone. Auf ausdrücklichen Wunsch des Feature-Verantwortlichen sind diese drei Quellen trotzdem als Adapter enthalten. Begründung: Das Tool geht nicht live, die Adapter sind nur für die lokale Nutzung gedacht.
+TEAM-KONTEXT 4C hat das Scraping von LinkedIn, Indeed und StepStone ursprünglich verboten. **Entschieden von David am 2026-10-24:** Die drei Adapter sind erlaubt, bleiben im Repo und sind standardmäßig aktiv. Das ist final.
 
-- Die drei Adapter sind **standardmäßig ausgeschaltet** und laufen nur mit `JOBS_ENABLE_SCRAPED_SOURCES=true`. Ohne diese Variable fragt das Feature nur offizielle APIs ab.
+- `JOBS_ENABLE_SCRAPED_SOURCES=false` schaltet die drei Adapter ab; ohne die Variable oder mit `true` laufen sie mit.
 - Die Adapter umgehen keinen Bot-Schutz: kein Captcha-Lösen, keine Stealth-Tricks, keine Proxys, keine gefälschten Browser- oder App-Kennungen. Sie senden einen eigenen, ehrlichen User-Agent. Zeigt ein Portal eine Prüfseite oder antwortet mit 403/429, meldet der Adapter „blockiert“ und die anderen Quellen liefern weiter.
-- `robots.txt` erlaubt diese Pfade bei LinkedIn und Indeed nicht. **Offene Entscheidung für Ole:** Sollen die drei Adapter vor dem Merge entfernt werden oder hinter dem Schalter bleiben? Entfernen geht ohne Umbau: die drei Dateien `src/lib/jobs/sources/{linkedin,indeed,stepstone}.ts` löschen und die Einträge in `sources/index.ts` streichen.
+- Entfernen ginge weiterhin ohne Umbau: die drei Dateien `src/lib/jobs/sources/{linkedin,indeed,stepstone}.ts` löschen und die Einträge in `sources/index.ts` streichen.
 
 ## 1. Was gebaut wurde
 
@@ -27,7 +27,7 @@ Neuer Tab **„Stellen“** (`/jobs`):
 **Lokal testen:**
 1. Migrationen einspielen (siehe Abschnitt 2), dann `npm run db:types`.
 2. `npm run dev`, einloggen, `/jobs` öffnen. Die Suche startet mit den bestätigten Werten aus dem Onboarding-Profil (mit den Angaben aus `docs/candidate-profile.example.json`: „Frankfurt am Main“ / „Consulting“ / „Praktikum“); danach z. B. selbst „Strategy“ / „München“ suchen. Ohne Profil startet die Suche leer.
-3. Optional: `JOBS_ENABLE_SCRAPED_SOURCES=true` in `.env.local` setzen und den Dev-Server neu starten.
+3. LinkedIn, Indeed und StepStone sind standardmäßig dabei. Abschalten: `JOBS_ENABLE_SCRAPED_SOURCES=false` in `.env.local`, dann den Dev-Server neu starten.
 4. Tests: `npm run test:jobs` (Adapter und Logik, offline) und `npm run db:test:jobs` (RLS, PGlite).
 
 **Quellen und ihre Bedingungen** (geprüft am 24.10.2026):
@@ -62,8 +62,8 @@ Am Ende von `.env.example` anhängen:
 
 ```bash
 # --- Feature C – Stellen-Scraper ---
-# LinkedIn/Indeed/StepStone-Adapter (nur lokal, siehe docs/handoff/job-scraper.md). Standard: aus.
-JOBS_ENABLE_SCRAPED_SOURCES=false
+# LinkedIn/Indeed/StepStone-Adapter (siehe docs/handoff/job-scraper.md). Standard: an, false schaltet sie ab.
+JOBS_ENABLE_SCRAPED_SOURCES=true
 # Optional: Adzuna API (https://developer.adzuna.com), kostenloser Key
 ADZUNA_APP_ID=
 ADZUNA_APP_KEY=
@@ -106,7 +106,7 @@ README-Abschnitt zum Anhängen:
 ## Stellen-Scraper
 
 Tab „Stellen“ (`/jobs`): sucht Praktika, Werkstudentenjobs und Einstiegsstellen bei der Bundesagentur für Arbeit
-und Arbeitnow (optional Adzuna). LinkedIn, Indeed und StepStone nur lokal mit `JOBS_ENABLE_SCRAPED_SOURCES=true`.
+und Arbeitnow (optional Adzuna), dazu LinkedIn, Indeed und StepStone (abschaltbar mit `JOBS_ENABLE_SCRAPED_SOURCES=false`).
 Tests: `npm run test:jobs`, `npm run db:test:jobs`. Details: `docs/handoff/job-scraper.md`.
 ```
 
@@ -143,7 +143,7 @@ Tests: `npm run test:jobs`, `npm run db:test:jobs`. Details: `docs/handoff/job-s
   - `generateJson(schema, { tier, system, prompt, check })` aus `@/lib/llm`, genutzt in `src/lib/jobs/outlook.ts`, mit derselben Signatur, wie Feature A sie nutzt.
 - Typen: Nach den Migrationen `npm run db:types` ausführen, sonst kennt der Supabase-Client die neuen Tabellen nicht.
 - Die Bereichs-Zuordnung (Track) läuft weiter rein über Stichwörter (`src/lib/jobs/normalize.ts`). Gemma wird nur für die Einschätzung genutzt.
-- **Einschätzung ohne Kennzeichnung:** Die Werte von Gemma (Vorlauf, Bewerbungszeitraum, Andrang, Tipp) sind nicht überprüft und können falsch sein. In der Oberfläche sind sie nur als Näherung formuliert („ca.“), nicht als Schätzung von Gemma gekennzeichnet. Das war der Wunsch des Feature-Verantwortlichen. **Offene Entscheidung für Ole**, ob das so bleibt, bevor echte Nutzer das Tool verwenden.
+- **Einschätzung ohne Kennzeichnung:** Die Werte von Gemma (Vorlauf, Bewerbungszeitraum, Andrang, Tipp) sind nicht überprüft und können falsch sein. In der Oberfläche sind sie nur als Näherung formuliert („ca.“), nicht als Schätzung von Gemma gekennzeichnet. **Entschieden von David am 2026-10-24:** Das bleibt so.
 - **Bewerbungsfenster:** Wann eine Firma tatsächlich Stellen öffnet, lässt sich nur über tägliche Snapshots der Anzeigen über Monate ermitteln. Das bräuchte einen Cron-Job, den TEAM-KONTEXT im ersten Schritt nicht vorsieht. Bis dahin kommt der Vorlauf aus einzelnen BA-Anzeigen (Veröffentlichung → Start) oder aus der Gemma-Schätzung.
 - Bundesagentur: Filtern nach Arbeitgeber funktioniert nicht, der Parameter `arbeitgeber` liefert immer 0 Treffer. Firmen werden nur gefunden, wenn ihr Name in Titel oder Beruf vorkommt; PwC schreibt dort aktuell gar keine Praktika aus.
 - StepStone-Gehälter sind Schätzungen von StepStone selbst (`salaryType: "Predicted"`). LinkedIn-Bewerberzahlen zählen Klicks auf „Bewerben“, nicht eingegangene Bewerbungen.

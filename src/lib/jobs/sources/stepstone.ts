@@ -10,7 +10,7 @@ import { cleanLine, htmlToText, normalizeWhitespace, toIsoDate } from "../text";
 import { scrapedSourcesEnabled } from "./flags";
 import type { JobDetails, JobSource } from "./types";
 
-// HTML scraping of public result pages. Disabled unless JOBS_ENABLE_SCRAPED_SOURCES=true.
+// HTML scraping of public result pages. On unless JOBS_ENABLE_SCRAPED_SOURCES=false.
 const BASE_URL = "https://www.stepstone.de";
 const STATE_MARKER = /window\.__PRELOADED_STATE__\["app-unifiedResultlist"\]\s*=\s*/;
 
