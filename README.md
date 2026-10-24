@@ -14,6 +14,7 @@ Stack: Next.js 16 (App Router, TypeScript), Tailwind CSS 4, shadcn/ui, Supabase 
 - [x] Schritt 6 – Lebenslauf-Tab
 - [ ] Schritt 7 – Charakter-Tab
 - [ ] Schritt 8 – Feinschliff
+- [x] Stellen-Scraper: Tab „Stellen“ mit Suche, Merken und Übergabe an den Lebenslauf
 
 ## Voraussetzungen
 
@@ -219,3 +220,9 @@ Statt der gezeichneten Interviewerin kann ein echtes Foto sprechen. Pro vorgeles
 Drei Lebensläufe pro Nutzer – Finance, Consulting und Startup –, erstellt aus dem Onboarding-Profil. Der Bereich bestimmt Aufbau und Zuschnitt, die Rolle, auf die man sich bewirbt, steht oben im Lebenslauf. Anpassen per Chat (jede Änderung einzeln annehmen oder ablehnen), Versionen, Export als PDF und DOCX. Gemma nutzt nur Angaben aus dem Profil. Details: `docs/handoff/cv-tailoring.md`.
 
 Tests: `npm run test:resume` (Logik) und `npm run db:test:resume` (RLS).
+
+## Stellen-Scraper
+
+Tab „Stellen“ (`/jobs`): sucht Praktika, Werkstudentenjobs und Einstiegsstellen bei der Bundesagentur für Arbeit
+und Arbeitnow (optional Adzuna). LinkedIn, Indeed und StepStone nur lokal mit `JOBS_ENABLE_SCRAPED_SOURCES=true`.
+Tests: `npm run test:jobs`, `npm run db:test:jobs`. Details: `docs/handoff/job-scraper.md`.
