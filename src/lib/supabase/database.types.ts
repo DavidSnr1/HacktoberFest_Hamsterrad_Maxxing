@@ -18,6 +18,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      candidate_profiles: {
+        Row: {
+          created_at: string
+          data: Json
+          onboarding_completed_at: string | null
+          onboarding_skipped_at: string | null
+          updated_at: string
+          user_id: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          data: Json
+          onboarding_completed_at?: string | null
+          onboarding_skipped_at?: string | null
+          updated_at?: string
+          user_id?: string
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          data?: Json
+          onboarding_completed_at?: string | null
+          onboarding_skipped_at?: string | null
+          updated_at?: string
+          user_id?: string
+          version?: number
+        }
+        Relationships: []
+      }
       consents: {
         Row: {
           granted_at: string
@@ -262,6 +292,7 @@ export type Database = {
         | "resume_tailored"
         | "experience_recorded"
         | "daily_streak"
+        | "profile_completed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -382,6 +413,7 @@ export const Constants = {
         "resume_tailored",
         "experience_recorded",
         "daily_streak",
+        "profile_completed",
       ],
     },
   },

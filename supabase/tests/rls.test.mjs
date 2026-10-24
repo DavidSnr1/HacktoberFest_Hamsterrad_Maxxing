@@ -108,12 +108,30 @@ check("duplicate consent per type rejected (use upsert)", Boolean(r.error));
 r = await as("authenticated", A, `insert into consents (type, policy_version) values ('voice','v2') on conflict (user_id, type) do update set policy_version = excluded.policy_version, granted_at = now() returning policy_version`);
 check("consent upsert works", r.rows?.[0]?.policy_version === "v2");
 
+// --- profile (candidate_profiles) ---
+r = await as("service_role", null, `insert into candidate_profiles (user_id, data) values ('${A}', '{"schemaVersion":1}') returning version`);
+check("server (service role) can create a profile", r.rows?.[0]?.version === 0);
+r = await as("authenticated", A, `select data from candidate_profiles`);
+check("A can read own profile", r.rows?.length === 1);
+r = await as("authenticated", B, `select data from candidate_profiles`);
+check("B cannot read A's profile", r.rows?.length === 0);
+r = await as("authenticated", B, `insert into candidate_profiles (data) values ('{}')`);
+check("users cannot insert profiles directly", Boolean(r.error));
+r = await as("authenticated", A, `update candidate_profiles set data = '{"hacked":true}' returning user_id`);
+check("users cannot update their profile directly", Boolean(r.error) || r.rows?.length === 0);
+r = await as("service_role", null, `update candidate_profiles set data = '[]' where user_id = '${A}'`);
+check("profile data must be a JSON object", Boolean(r.error));
+r = await as("anon", null, `select * from candidate_profiles`);
+check("anon cannot read profiles", Boolean(r.error));
+r = await as("service_role", null, `insert into xp_events (user_id, type, amount, ref_id) values ('${A}','profile_completed',50,'${A}') returning id`);
+check("xp event type profile_completed exists", r.rows?.length === 1);
+
 // Cascade delete
 await db.exec(`delete from auth.users where id='${A}'`);
 const left = await db.query(`
   select (select count(*) from interviews) + (select count(*) from interview_feedback) + (select count(*) from resumes)
        + (select count(*) from tailored_resumes) + (select count(*) from xp_events) + (select count(*) from consents)
-       + (select count(*) from profiles where id='${A}') as n`);
+       + (select count(*) from profiles where id='${A}') + (select count(*) from candidate_profiles) as n`);
 check("deleting the user removes all their data", Number(left.rows[0].n) === 0);
 
 console.log(failed ? `\n${failed} FAILED` : "\nALL PASSED");

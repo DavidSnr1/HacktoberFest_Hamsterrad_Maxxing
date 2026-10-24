@@ -12,6 +12,8 @@ export const XP_REWARDS = {
   resumeUploaded: 50,
   experienceRecorded: 30,
   resumeTailored: 80,
+  /** Finishing the onboarding chat (once per user). */
+  profileCompleted: 50,
 } as const;
 
 export function feedbackScoreXp(overall: number) {
