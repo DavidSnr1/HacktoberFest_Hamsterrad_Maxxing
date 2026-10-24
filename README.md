@@ -14,6 +14,7 @@ Stack: Next.js 16 (App Router, TypeScript), Tailwind CSS 4, shadcn/ui, Supabase 
 - [ ] Schritt 6 – Lebenslauf-Tab
 - [ ] Schritt 7 – Charakter-Tab
 - [ ] Schritt 8 – Feinschliff
+- [x] Stellen-Scraper: Tab „Stellen“ mit Suche, Merken und Übergabe an den Lebenslauf
 
 ## Voraussetzungen
 
@@ -213,3 +214,9 @@ Statt der gezeichneten Interviewerin kann ein echtes Foto sprechen. Pro vorgeles
 - **Fragentext oder Stimme geändert?** Skript erneut ausführen, es erzeugt nur die betroffenen Clips neu. Bis dahin erscheint für diese Zeilen wieder die gezeichnete Interviewerin.
 - **Neues Foto?** Mit `--force` alle Clips des Tracks neu erzeugen.
 - Name und Rolle der Interviewerin stehen in `src/lib/interview/tracks.ts`.
+
+## Stellen-Scraper
+
+Tab „Stellen“ (`/jobs`): sucht Praktika, Werkstudentenjobs und Einstiegsstellen bei der Bundesagentur für Arbeit
+und Arbeitnow (optional Adzuna). LinkedIn, Indeed und StepStone nur lokal mit `JOBS_ENABLE_SCRAPED_SOURCES=true`.
+Tests: `npm run test:jobs`, `npm run db:test:jobs`. Details: `docs/handoff/job-scraper.md`.

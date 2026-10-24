@@ -1,0 +1,27 @@
+# Feature C – Stellen-Scraper: neue Abhängigkeiten
+# Im Repo-Root auf dem Branch feature/job-scraper installieren:
+#
+#   npm install cheerio@^1.2.0 server-only@^0.0.1
+#   npm install -D tsx@^4.23.15
+#
+# Bereits im Projekt vorhanden und genutzt (nichts zu tun):
+#   zod, next, react, lucide-react, @supabase/supabase-js, @electric-sql/pglite
+
+# --- dependencies ---
+cheerio@^1.2.0        # HTML-Parsing in den Adaptern für LinkedIn und Indeed
+server-only@^0.0.1    # "import 'server-only'" in den Server-Modulen; überspringen, falls schon installiert
+
+# --- devDependencies ---
+tsx@^4.23.15          # TypeScript-Unit-Tests mit node:test (löst den Alias @/ auf)
+
+# --- package.json-Scripts (ergänzen, nichts ersetzen) ---
+# "test:jobs":    "node --conditions=react-server --import tsx --test \"src/lib/jobs/__tests__/*.test.ts\""
+# "db:test:jobs": "node --test supabase/tests/jobs.test.mjs"
+
+# --- Umgebungsvariablen (.env.local, am Ende von .env.example ergänzen) ---
+# JOBS_ENABLE_SCRAPED_SOURCES=false   # true = LinkedIn/Indeed/StepStone aktiv (nur lokal)
+# ADZUNA_APP_ID=                      # optional, kostenloser Key: https://developer.adzuna.com
+# ADZUNA_APP_KEY=
+#
+# Bestehende Variablen, die Feature C jetzt zusätzlich nutzt (Einschätzung per Gemma):
+# GEMINI_API_KEY, LLM_MODEL_LIVE

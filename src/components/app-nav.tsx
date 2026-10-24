@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Suspense } from "react";
-import { FileTextIcon, UserRoundIcon, VideoIcon, type LucideIcon } from "lucide-react";
+import { BriefcaseIcon, FileTextIcon, UserRoundIcon, VideoIcon, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Tab = { href: string; label: string; icon: LucideIcon };
@@ -12,6 +12,7 @@ const TABS: Tab[] = [
   { href: "/character", label: "Charakter", icon: UserRoundIcon },
   { href: "/interviews", label: "Interviews", icon: VideoIcon },
   { href: "/resume", label: "Lebenslauf", icon: FileTextIcon },
+  { href: "/jobs", label: "Stellen", icon: BriefcaseIcon },
 ];
 
 type NavListProps = { active?: string };
@@ -68,7 +69,7 @@ function MobileNavList({ active }: NavListProps) {
       aria-label="Hauptnavigation"
       className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
     >
-      <ul className="grid grid-cols-3">
+      <ul className="grid grid-cols-4">
         {TABS.map(({ href, label, icon: Icon }) => (
           <li key={href}>
             <Link
