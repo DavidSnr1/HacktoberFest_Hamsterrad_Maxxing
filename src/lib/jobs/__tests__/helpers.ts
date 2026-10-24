@@ -1,0 +1,12 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+
+const FIXTURES = join(import.meta.dirname, "fixtures");
+
+export function fixture(name: string): string {
+  return readFileSync(join(FIXTURES, name), "utf8");
+}
+
+export function jsonFixture(name: string): unknown {
+  return JSON.parse(fixture(name));
+}

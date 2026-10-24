@@ -1,0 +1,149 @@
+{
+  "ergebnisliste": [
+    {
+      "stellenangebotsart": "PRAKTIKUM_TRAINEE",
+      "stellenangebotsTitel": "Praktikum IT Consulting für Banken & Versicherungen",
+      "quereinstiegGeeignet": false,
+      "arbeitszeitSchichtNachtWochenende": false,
+      "arbeitszeitTeilzeitAbend": false,
+      "arbeitszeitTeilzeitNachmittag": false,
+      "arbeitszeitTeilzeitVormittag": false,
+      "arbeitszeitTeilzeitFlexibel": false,
+      "arbeitszeitVollzeit": false,
+      "eintrittszeitraum": {
+        "von": "2026-10-01"
+      },
+      "verguetungsangabe": "KEINE_ANGABEN",
+      "vertragsdauer": "KEINE_ANGABE",
+      "istGeringfuegigeBeschaeftigung": false,
+      "stellenlokationen": [
+        {
+          "adresse": {
+            "plz": "80331",
+            "ort": "München",
+            "region": "BAYERN",
+            "land": "DEUTSCHLAND"
+          },
+          "breite": 48.1355827,
+          "laenge": 11.5739758
+        }
+      ],
+      "homeofficemoeglich": false,
+      "chiffrenummer": "236951",
+      "veroeffentlichungszeitraum": {
+        "von": "2026-09-03"
+      },
+      "datumErsteVeroeffentlichung": "2026-09-03",
+      "aenderungsdatum": "2026-10-01T07:07:07.051",
+      "externeURL": "https://www.get-in-it.de/jobsuche/p236951?utm_source=arbeitsagentur&utm_medium=organic&utm_campaign=launch-premium",
+      "hauptberuf": "IT-Berater/in",
+      "firma": "zeb",
+      "referenznummer": "13644-236951-S",
+      "entfernung": 1,
+      "alleBerufe": [
+        "IT-Berater/in"
+      ]
+    },
+    {
+      "stellenangebotsart": "PRAKTIKUM_TRAINEE",
+      "stellenangebotsTitel": "Praktikum im Inhouse Consulting (all genders)",
+      "quereinstiegGeeignet": false,
+      "arbeitszeitSchichtNachtWochenende": false,
+      "arbeitszeitTeilzeitAbend": true,
+      "arbeitszeitTeilzeitNachmittag": true,
+      "arbeitszeitTeilzeitVormittag": true,
+      "arbeitszeitTeilzeitFlexibel": false,
+      "arbeitszeitVollzeit": true,
+      "eintrittszeitraum": {
+        "von": "2026-10-19"
+      },
+      "verguetungsangabe": "KEINE_ANGABEN",
+      "vertragsdauer": "KEINE_ANGABE",
+      "istGeringfuegigeBeschaeftigung": false,
+      "stellenlokationen": [
+        {
+          "adresse": {
+            "strasse": "Ferchenbachstraße 126",
+            "plz": "80995",
+            "ort": "München",
+            "region": "BAYERN",
+            "land": "DEUTSCHLAND"
+          },
+          "breite": 48.209031,
+          "laenge": 11.513493
+        }
+      ],
+      "homeofficemoeglich": false,
+      "veroeffentlichungszeitraum": {
+        "von": "2026-10-19"
+      },
+      "datumErsteVeroeffentlichung": "2026-08-25",
+      "aenderungsdatum": "2026-10-19T10:06:06.773",
+      "externeURL": "https://www.heyjobs.co/de-de/jobs/d9434618-dbf4-4475-a024-05ff31ef9f5b?utm_content=ad_link&utm_medium=sjm-pr&utm_source=jobboerse",
+      "hauptberuf": "Organisator/in",
+      "firma": "MTU Aero Engines AG",
+      "referenznummer": "12951-d9434618-dbf4-4475--S",
+      "entfernung": 8,
+      "alleBerufe": [
+        "Organisator/in"
+      ]
+    },
+    {
+      "stellenangebotsart": "PRAKTIKUM_TRAINEE",
+      "stellenangebotsTitel": "Praktikum im Bereich Automation & KI (m/w/d)",
+      "quereinstiegGeeignet": false,
+      "arbeitszeitSchichtNachtWochenende": false,
+      "arbeitszeitTeilzeitAbend": false,
+      "arbeitszeitTeilzeitNachmittag": true,
+      "arbeitszeitTeilzeitVormittag": true,
+      "arbeitszeitTeilzeitFlexibel": false,
+      "arbeitszeitVollzeit": true,
+      "eintrittszeitraum": {
+        "von": "2026-10-12"
+      },
+      "verguetungsangabe": "KEINE_ANGABEN",
+      "vertragsdauer": "KEINE_ANGABE",
+      "istGeringfuegigeBeschaeftigung": false,
+      "stellenlokationen": [
+        {
+          "adresse": {
+            "plz": "80331",
+            "ort": "München",
+            "region": "BAYERN",
+            "land": "DEUTSCHLAND"
+          },
+          "breite": 48.1355827,
+          "laenge": 11.5739758
+        }
+      ],
+      "homeofficemoeglich": false,
+      "chiffrenummer": "2611344",
+      "veroeffentlichungszeitraum": {
+        "von": "2026-10-09"
+      },
+      "datumErsteVeroeffentlichung": "2026-10-09",
+      "aenderungsdatum": "2026-10-09T14:12:30.786",
+      "externeURL": "https://www.jobexport.de/job/5267742.html?exp=81&cid=c44feae3-40dc-4c98-bd4a-78f0482fa3a2",
+      "hauptberuf": "Informatiker/in",
+      "firma": "Pexon Consulting GmbH",
+      "referenznummer": "13635-c44feae3_JB5267742-S",
+      "entfernung": 1,
+      "alleBerufe": [
+        "Informatiker/in"
+      ]
+    }
+  ],
+  "maxErgebnisse": 12,
+  "page": 1,
+  "size": 5,
+  "woOutput": {
+    "bereinigterOrt": "München",
+    "suchmodus": "UMKREISSUCHE",
+    "koordinaten": [
+      {
+        "lat": 48.1476759,
+        "lon": 11.5695622
+      }
+    ]
+  }
+}
