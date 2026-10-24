@@ -23,7 +23,7 @@ export function FeedbackPending({ until }: { until: number }) {
   }, [router, until]);
 
   return (
-    <div className="flex gap-3 rounded-xl border p-4" role="status" aria-live="polite">
+    <div className="flex gap-3 rounded-lg border bg-card p-4" role="status" aria-live="polite">
       <Loader2Icon className="mt-0.5 size-5 shrink-0 animate-spin text-muted-foreground" aria-hidden />
       <div className="flex flex-col gap-1 text-sm">
         <p className="font-medium">Deine Auswertung wird erstellt …</p>

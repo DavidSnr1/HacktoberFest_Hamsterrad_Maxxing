@@ -43,42 +43,62 @@ export async function RecentInterviews() {
   }
   if (!interviews?.length) {
     return (
-      <p className="rounded-xl border border-dashed px-4 py-6 text-center text-sm text-muted-foreground">
+      <p className="rounded-lg border border-dashed bg-card px-4 py-6 text-center text-sm text-muted-foreground">
         Noch keine Interviews. Starte dein erstes oben.
       </p>
     );
   }
 
   return (
-    <ul className="divide-y rounded-xl border">
-      {interviews.map((interview) => (
-        <li key={interview.id}>
-          <Link
-            href={`/interviews/${interview.id}/feedback`}
-            className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/60"
-          >
-            <div className="flex min-w-0 flex-1 flex-col">
-              <span className="font-medium">{TRACKS[interview.track].label}</span>
-              <span className="text-sm text-muted-foreground">
-                {dateFormat.format(new Date(interview.started_at))}
-                {formatDuration(interview.duration_seconds) &&
-                  ` · ${formatDuration(interview.duration_seconds)}`}
-              </span>
-            </div>
-            <span
-              className={cn(
-                "shrink-0 rounded-full px-2 py-0.5 text-xs font-medium",
-                interview.status === "finished"
-                  ? "bg-primary/10 text-primary"
-                  : "bg-muted text-muted-foreground",
-              )}
-            >
-              {STATUS_LABELS[interview.status]}
-            </span>
-            <ChevronRightIcon className="size-4 shrink-0 text-muted-foreground" aria-hidden />
-          </Link>
-        </li>
-      ))}
-    </ul>
+    <div className="overflow-hidden rounded-lg border bg-card">
+      {/* Column heads mirror the row layout below; phones show stacked rows instead. */}
+      <div
+        className="hidden items-center gap-4 border-b bg-muted/60 px-4 py-2 text-[0.7rem] font-semibold tracking-[0.12em] text-muted-foreground uppercase sm:flex"
+        aria-hidden
+      >
+        <span className="w-36">Track</span>
+        <span className="flex-1">Datum</span>
+        <span className="w-16 text-right">Dauer</span>
+        <span className="w-40">Status</span>
+        <span className="w-4" />
+      </div>
+      <ul className="divide-y">
+        {interviews.map((interview) => {
+          const duration = formatDuration(interview.duration_seconds);
+          return (
+            <li key={interview.id}>
+              <Link
+                href={`/interviews/${interview.id}/feedback`}
+                className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/60 sm:gap-4"
+              >
+                <div className="flex min-w-0 flex-1 flex-col sm:flex-row sm:items-center sm:gap-4">
+                  <span className="font-medium sm:w-36">{TRACKS[interview.track].label}</span>
+                  <span className="text-sm text-muted-foreground tabular-nums sm:flex-1">
+                    {dateFormat.format(new Date(interview.started_at))}
+                    {duration && <span className="sm:hidden"> · {duration}</span>}
+                  </span>
+                  <span className="hidden w-16 text-right text-sm text-muted-foreground tabular-nums sm:block">
+                    {duration ?? "–"}
+                  </span>
+                </div>
+                <span className="shrink-0 sm:w-40">
+                  <span
+                    className={cn(
+                      "inline-flex items-center gap-1.5 rounded-sm border px-1.5 py-0.5 text-xs font-medium",
+                      interview.status === "finished"
+                        ? "border-positive/25 bg-positive/10 text-positive"
+                        : "border-border bg-muted text-muted-foreground",
+                    )}
+                  >
+                    {STATUS_LABELS[interview.status]}
+                  </span>
+                </span>
+                <ChevronRightIcon className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
   );
 }

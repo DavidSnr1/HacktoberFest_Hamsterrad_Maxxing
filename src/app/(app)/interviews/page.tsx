@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { BriefcaseIcon, RocketIcon, TrendingUpIcon, type LucideIcon } from "lucide-react";
+import { PageHeader } from "@/components/page-header";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -25,15 +27,13 @@ const TRACK_ICONS: Record<InterviewTrack, LucideIcon> = {
 
 export default function InterviewsPage() {
   return (
-    <div className="flex flex-col gap-10">
+    <div className="flex flex-col gap-12">
       <section className="flex flex-col gap-6">
-        <header className="flex flex-col gap-1">
-          <h1 className="text-2xl font-semibold tracking-tight">Mock Interviews</h1>
-          <p className="text-muted-foreground">
-            Wähle einen Track. Ein KI-Interviewer führt mit dir ein realistisches Gespräch
-            per Sprache, etwa 15 bis 20 Minuten.
-          </p>
-        </header>
+        <PageHeader
+          eyebrow="Interviewtraining"
+          title="Mock Interviews"
+          description="Wähle einen Track. Ein KI-Interviewer führt mit dir ein realistisches Gespräch per Sprache, etwa 15 bis 20 Minuten."
+        />
         <div className="grid gap-4 md:grid-cols-3">
           {TRACK_ORDER.map((track) => (
             <TrackCard key={track} track={track} />
@@ -42,8 +42,8 @@ export default function InterviewsPage() {
       </section>
 
       <section className="flex flex-col gap-4">
-        <h2 className="text-lg font-semibold tracking-tight">Deine letzten Interviews</h2>
-        <Suspense fallback={<div className="h-24 animate-pulse rounded-xl bg-muted" />}>
+        <h2 className="text-xl font-semibold tracking-tight">Deine letzten Interviews</h2>
+        <Suspense fallback={<div className="h-24 animate-pulse rounded-lg bg-muted" />}>
           <RecentInterviews />
         </Suspense>
       </section>
@@ -57,26 +57,29 @@ function TrackCard({ track }: { track: InterviewTrack }) {
 
   return (
     <Card className={config.enabled ? undefined : "opacity-60"}>
-      <CardHeader>
-        <div className="mb-2 flex size-10 items-center justify-center rounded-lg bg-muted">
-          <Icon className="size-5" aria-hidden />
+      <CardHeader className="gap-2">
+        <div className="mb-2 flex items-start justify-between gap-2">
+          <div className="flex size-10 items-center justify-center rounded-md bg-primary text-primary-foreground">
+            <Icon className="size-5" aria-hidden />
+          </div>
+          {!config.enabled && <Badge variant="outline">Bald verfügbar</Badge>}
         </div>
-        <CardTitle className="flex items-center gap-2 text-lg">
-          {config.label}
-          {!config.enabled && (
-            <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
-              Bald verfügbar
-            </span>
-          )}
-        </CardTitle>
+        <CardTitle className="text-xl font-semibold tracking-tight">{config.label}</CardTitle>
         <CardDescription>{config.tagline}</CardDescription>
       </CardHeader>
-      <CardContent className="flex-1">
-        <ul className="flex list-disc flex-col gap-1 pl-5 text-sm text-muted-foreground">
+      <CardContent className="flex flex-1 flex-col gap-4">
+        <ul className="flex flex-col gap-1.5 text-sm">
           {config.topics.map((topic) => (
-            <li key={topic}>{topic}</li>
+            <li key={topic} className="flex gap-2.5">
+              <span className="mt-[0.45rem] size-1.5 shrink-0 bg-gold" aria-hidden />
+              {topic}
+            </li>
           ))}
         </ul>
+        <p className="mt-auto border-t pt-3 text-xs text-muted-foreground">
+          Interviewer: <span className="font-medium text-foreground">{config.interviewer.name}</span>,{" "}
+          {config.interviewer.role}
+        </p>
       </CardContent>
       <CardFooter>
         {config.enabled ? (

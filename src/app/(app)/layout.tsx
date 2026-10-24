@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { DesktopNav, MobileNav } from "@/components/app-nav";
 import { AuthGuard } from "@/components/auth-guard";
+import { Brand } from "@/components/brand";
 import { UserMenu } from "@/components/user-menu";
 
 export default function AppLayout({ children }: LayoutProps<"/">) {
@@ -9,10 +10,10 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
   // parts stream in behind Suspense boundaries.
   return (
     <div className="flex min-h-full flex-1 flex-col">
-      <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur">
+      <header className="sticky top-0 z-40 border-b border-gold/40 bg-primary text-primary-foreground">
         <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between gap-4 px-4">
-          <Link href="/interviews" className="font-semibold tracking-tight">
-            Karrierecoach
+          <Link href="/interviews" aria-label="Karrierecoach, zur Startseite">
+            <Brand />
           </Link>
           <DesktopNav />
           <Suspense fallback={<div className="h-7 w-20" aria-hidden />}>
@@ -20,7 +21,7 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
           </Suspense>
         </div>
       </header>
-      <main className="mx-auto w-full max-w-5xl flex-1 px-4 pt-6 pb-24 md:pb-10">
+      <main className="mx-auto w-full max-w-5xl flex-1 px-4 pt-8 pb-24 md:pt-10 md:pb-12">
         <Suspense fallback={<PageSkeleton />}>
           <AuthGuard>{children}</AuthGuard>
         </Suspense>

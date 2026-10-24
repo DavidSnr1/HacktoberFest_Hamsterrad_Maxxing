@@ -7,6 +7,7 @@ export const metadata: Metadata = { title: "Charakter" };
 export default function CharacterPage() {
   return (
     <TabPlaceholder
+      eyebrow="Fortschritt"
       title="Charakter"
       description="Dein Avatar wächst mit jedem Interview und jedem Lebenslauf."
       icon={UserRoundIcon}

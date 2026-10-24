@@ -49,8 +49,9 @@ function DesktopNavList({ active }: NavListProps) {
               href={href}
               aria-current={active === href ? "page" : undefined}
               className={cn(
-                "flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
-                active === href && "bg-muted text-foreground",
+                "relative flex h-14 items-center gap-2 px-3 text-sm font-medium text-primary-foreground/70 transition-colors hover:text-primary-foreground",
+                active === href &&
+                  "text-primary-foreground after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:bg-gold",
               )}
             >
               <Icon className="size-4" aria-hidden />
@@ -67,7 +68,7 @@ function MobileNavList({ active }: NavListProps) {
   return (
     <nav
       aria-label="Hauptnavigation"
-      className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
     >
       <ul className="grid grid-cols-4">
         {TABS.map(({ href, label, icon: Icon }) => (
@@ -76,8 +77,9 @@ function MobileNavList({ active }: NavListProps) {
               href={href}
               aria-current={active === href ? "page" : undefined}
               className={cn(
-                "flex min-h-14 flex-col items-center justify-center gap-1 text-xs font-medium text-muted-foreground transition-colors",
-                active === href && "text-foreground",
+                "relative flex min-h-14 flex-col items-center justify-center gap-1 text-xs font-medium text-muted-foreground transition-colors",
+                active === href &&
+                  "text-primary before:absolute before:inset-x-6 before:top-0 before:h-0.5 before:bg-gold",
               )}
             >
               <Icon className={cn("size-5", active === href && "stroke-[2.5]")} aria-hidden />

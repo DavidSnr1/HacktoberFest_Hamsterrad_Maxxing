@@ -18,7 +18,8 @@ export function ResumePreview({ resume }: { resume: Resume }) {
     <article lang={resume.language} className="rounded-lg border bg-white p-5 text-sm leading-relaxed text-neutral-900 shadow-sm sm:p-8">
       <header>
         {resume.header.name ? (
-          <h2 className="text-2xl font-bold text-[#1F3A5F]">{resume.header.name}</h2>
+          // font-sans: the preview mirrors the Helvetica export, not the app's serif headings.
+          <h2 className="font-sans text-2xl font-bold text-[#1F3A5F]">{resume.header.name}</h2>
         ) : (
           <p className="rounded bg-amber-50 px-2 py-1 text-xs text-amber-900">
             Dein Name fehlt.{" "}

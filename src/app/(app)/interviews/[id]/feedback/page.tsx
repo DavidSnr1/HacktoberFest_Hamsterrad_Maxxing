@@ -3,12 +3,12 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
 import { ArrowLeftIcon, CircleAlertIcon } from "lucide-react";
+import { PageHeader } from "@/components/page-header";
 import { FeedbackPending } from "@/components/interview/feedback-pending";
 import { FeedbackView } from "@/components/interview/feedback-view";
 import { RetryFeedbackButton } from "@/components/interview/retry-feedback-button";
 import { TranscriptList } from "@/components/interview/transcript-list";
 import { getInterview, getInterviewFeedback } from "@/lib/interview/queries";
-import { getTranscriptStats, MIN_CANDIDATE_WORDS_FOR_FEEDBACK } from "@/lib/interview/transcript-stats";
 import { TRACKS } from "@/lib/interview/tracks";
 import { storedScoresSchema } from "@/lib/schemas/feedback";
 import { transcriptSchema } from "@/lib/schemas/interview";
@@ -39,7 +39,7 @@ export default function FeedbackPage({ params }: PageProps<"/interviews/[id]/fee
         <ArrowLeftIcon className="size-4" aria-hidden />
         Zurück zur Übersicht
       </Link>
-      <Suspense fallback={<div className="h-64 animate-pulse rounded-xl bg-muted" />}>
+      <Suspense fallback={<div className="h-64 animate-pulse rounded-lg bg-muted" />}>
         <FeedbackContent params={params} />
       </Suspense>
     </div>
@@ -55,21 +55,22 @@ async function FeedbackContent({ params }: Pick<PageProps<"/interviews/[id]/feed
   const track = TRACKS[interview.track];
   const transcript = transcriptSchema.safeParse(interview.transcript);
   const scores = feedback ? storedScoresSchema.safeParse(feedback.scores) : null;
-  const tooShort =
-    transcript.success && getTranscriptStats(transcript.data).candidateWords < MIN_CANDIDATE_WORDS_FOR_FEEDBACK;
   const minutes = interview.duration_seconds ? Math.max(1, Math.round(interview.duration_seconds / 60)) : null;
   const pendingUntil = interview.finished_at ? new Date(interview.finished_at).getTime() + PENDING_WINDOW_MS : 0;
-  const isPending = !feedback && !tooShort && isBefore(pendingUntil);
+  const isPending = !feedback && isBefore(pendingUntil);
 
   return (
     <>
-      <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Mock Interview · {track.label}</h1>
-        <p className="text-sm text-muted-foreground">
-          {dateFormat.format(new Date(interview.started_at))}
-          {minutes && ` · ${minutes} Min.`} · mit {track.interviewer.name}
-        </p>
-      </header>
+      <PageHeader
+        eyebrow="Auswertung"
+        title={`Mock Interview · ${track.label}`}
+        description={
+          <span className="tabular-nums">
+            {dateFormat.format(new Date(interview.started_at))}
+            {minutes && ` · ${minutes} Min.`} · mit {track.interviewer.name}
+          </span>
+        }
+      />
 
       {interview.status === "aborted" ? (
         <Notice>
@@ -88,13 +89,8 @@ async function FeedbackContent({ params }: Pick<PageProps<"/interviews/[id]/feed
         <Notice>Die gespeicherte Auswertung konnte nicht gelesen werden.</Notice>
       ) : isPending ? (
         <FeedbackPending until={pendingUntil} />
-      ) : tooShort ? (
-        <Notice>
-          Das Gespräch war zu kurz für eine aussagekräftige Auswertung. Nimm dir beim nächsten
-          Mal etwas mehr Zeit und beantworte mehrere Fragen ausführlich.
-        </Notice>
       ) : (
-        <div className="flex flex-col gap-3 rounded-xl border p-4">
+        <div className="flex flex-col gap-3 rounded-lg border bg-card p-4">
           <div className="flex gap-3">
             <CircleAlertIcon className="mt-0.5 size-5 shrink-0 text-muted-foreground" aria-hidden />
             <div className="flex flex-col gap-1 text-sm">
@@ -110,7 +106,7 @@ async function FeedbackContent({ params }: Pick<PageProps<"/interviews/[id]/feed
       )}
 
       <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold tracking-tight">Transkript</h2>
+        <h2 className="text-xl font-semibold tracking-tight">Transkript</h2>
         {!transcript.success ? (
           <p className="text-sm text-destructive" role="alert">
             Das Transkript konnte nicht gelesen werden.
@@ -121,7 +117,7 @@ async function FeedbackContent({ params }: Pick<PageProps<"/interviews/[id]/feed
           <TranscriptList
             entries={transcript.data}
             interviewerName={track.interviewer.name}
-            className="rounded-xl border p-4"
+            className="rounded-lg border bg-card p-4"
           />
         )}
       </section>
@@ -130,5 +126,5 @@ async function FeedbackContent({ params }: Pick<PageProps<"/interviews/[id]/feed
 }
 
 function Notice({ children }: { children: React.ReactNode }) {
-  return <div className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">{children}</div>;
+  return <div className="rounded-lg border border-dashed bg-card p-4 text-sm text-muted-foreground">{children}</div>;
 }

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { z } from "zod";
 
+import { PageHeader } from "@/components/page-header";
 import { ResumeWorkspace } from "@/components/resume/resume-workspace";
 import { hasConsent } from "@/lib/consent/server";
 import { getDisplayName } from "@/lib/profile/server";
@@ -32,7 +33,7 @@ export default async function ResumeDetailPage({ params }: PageProps<"/resume/[i
         <ArrowLeftIcon className="size-4" aria-hidden />
         Alle Lebensläufe
       </Link>
-      <h1 className="text-2xl font-semibold tracking-tight">{TRACK_TEMPLATES[doc.track].label}-Lebenslauf</h1>
+      <PageHeader eyebrow="Bewerbungsunterlagen" title={`${TRACK_TEMPLATES[doc.track].label}-Lebenslauf`} />
       {/* Remount on a new active version so the version picker and inputs start fresh. */}
       <ResumeWorkspace
         key={doc.activeVersion}

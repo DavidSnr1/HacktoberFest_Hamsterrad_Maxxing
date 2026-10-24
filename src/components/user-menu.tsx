@@ -4,6 +4,9 @@ import { SignOutButton } from "@/components/sign-out-button";
 import { buttonVariants } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/supabase/server";
 
+/** Ghost buttons in the navy header. */
+const ON_NAVY = "text-primary-foreground/80 hover:bg-white/10 hover:text-primary-foreground";
+
 /** Signed-in user's email and the sign-out button. Must sit inside <Suspense>. */
 export async function UserMenu() {
   const user = await getCurrentUser();
@@ -12,15 +15,19 @@ export async function UserMenu() {
   return (
     <div className="flex items-center gap-2">
       {user.email && (
-        <span className="hidden max-w-48 truncate text-sm text-muted-foreground lg:inline">
+        <span className="hidden max-w-48 truncate text-sm text-primary-foreground/60 lg:inline">
           {user.email}
         </span>
       )}
-      <Link href="/profile" className={buttonVariants({ variant: "ghost", size: "sm" })} aria-label="Mein Profil">
+      <Link
+        href="/profile"
+        className={buttonVariants({ variant: "ghost", size: "sm", className: ON_NAVY })}
+        aria-label="Mein Profil"
+      >
         <UserRoundCogIcon aria-hidden />
         <span className="hidden sm:inline">Mein Profil</span>
       </Link>
-      <SignOutButton />
+      <SignOutButton className={ON_NAVY} />
     </div>
   );
 }
