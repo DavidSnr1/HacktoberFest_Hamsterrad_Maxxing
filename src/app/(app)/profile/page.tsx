@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { DownloadIcon, MessageCircleIcon } from "lucide-react";
 import { PersonaAvatar } from "@/components/onboarding/persona-avatar";
+import { DisplayNameForm } from "@/components/profile/display-name-form";
 import { SuggestionActions } from "@/components/profile/suggestion-actions";
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -13,7 +14,7 @@ import {
   TRACK_LABELS,
 } from "@/lib/profile/labels";
 import { profileCompleteness } from "@/lib/profile/merge";
-import { getCandidateProfileRecord } from "@/lib/profile/server";
+import { getCandidateProfileRecord, getDisplayName } from "@/lib/profile/server";
 import type { ProfileSource, ProfileTarget } from "@/lib/schemas/candidate-profile";
 
 export const metadata: Metadata = { title: "Mein Profil" };
@@ -52,7 +53,7 @@ type Row = {
 };
 
 async function ProfileContent() {
-  const record = await getCandidateProfileRecord();
+  const [record, displayName] = await Promise.all([getCandidateProfileRecord(), getDisplayName()]);
   if (!record?.available) {
     return (
       <p className="text-sm text-destructive" role="alert">
@@ -148,6 +149,12 @@ async function ProfileContent() {
             Als JSON
           </a>
         </div>
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <h2 className="text-lg font-semibold tracking-tight">Name</h2>
+        <p className="text-sm text-muted-foreground">Steht oben in deinen Lebensläufen und im Export.</p>
+        <DisplayNameForm key={displayName ?? ""} initialName={displayName} />
       </section>
 
       {sections.map((section) => (

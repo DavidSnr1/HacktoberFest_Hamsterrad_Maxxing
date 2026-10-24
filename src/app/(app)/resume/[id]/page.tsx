@@ -6,9 +6,10 @@ import { z } from "zod";
 
 import { ResumeWorkspace } from "@/components/resume/resume-workspace";
 import { hasConsent } from "@/lib/consent/server";
+import { getDisplayName } from "@/lib/profile/server";
 import { diffResumes } from "@/lib/resume/diff";
 import { activeVersionOf, draftVersionOf, getResumeDocument } from "@/lib/resume/repository";
-import { TRACK_TEMPLATES } from "@/lib/resume/tracks";
+import { TRACK_TEMPLATES, withName } from "@/lib/resume/tracks";
 
 export const metadata: Metadata = {
   title: "Lebenslauf",
@@ -18,7 +19,7 @@ export default async function ResumeDetailPage({ params }: PageProps<"/resume/[i
   const { id } = await params;
   if (!z.uuid().safeParse(id).success) notFound();
 
-  const [doc, consentGranted] = await Promise.all([getResumeDocument(id), hasConsent("resume")]);
+  const [doc, consentGranted, name] = await Promise.all([getResumeDocument(id), hasConsent("resume"), getDisplayName()]);
   if (!doc) notFound();
 
   const active = activeVersionOf(doc);
@@ -40,7 +41,7 @@ export default async function ResumeDetailPage({ params }: PageProps<"/resume/[i
         targetRole={doc.targetRole}
         language={doc.language}
         activeVersion={doc.activeVersion}
-        versions={doc.versions}
+        versions={doc.versions.map((v) => ({ ...v, content: withName(v.content, name) }))}
         draft={draft && changes.length > 0 ? { version: draft.version, note: draft.notes, changes } : null}
         consentGranted={consentGranted}
       />

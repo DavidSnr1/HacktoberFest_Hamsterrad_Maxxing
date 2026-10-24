@@ -4,7 +4,7 @@ import { describe, it } from "node:test";
 import { RESUME_TRACKS, type LlmResumeDraft } from "@/lib/schemas/resume";
 
 import { resolveResume } from "../resolve";
-import { applyTrackTemplate, suggestTrack, toLlmDraft, TRACK_TEMPLATES, withRole } from "../tracks";
+import { applyTrackTemplate, suggestTrack, toLlmDraft, TRACK_TEMPLATES, withName, withRole } from "../tracks";
 import { validateResumeDraft } from "../validate";
 import { lena, lenaResume } from "./helpers";
 
@@ -81,6 +81,16 @@ describe("role", () => {
     assert.equal(after.targetRole, "Praktikum Private Equity");
     assert.equal(after.header.headline, "Praktikum Private Equity");
     assert.deepEqual({ ...after, targetRole: before.targetRole, header: before.header }, before);
+  });
+});
+
+describe("name", () => {
+  it("withName only changes the name in the header", () => {
+    const before = lenaResume();
+    const after = withName(before, "Lena M. Becker");
+    assert.equal(after.header.name, "Lena M. Becker");
+    assert.deepEqual({ ...after, header: { ...after.header, name: before.header.name } }, before);
+    assert.equal(withName(before, null).header.name, null);
   });
 });
 

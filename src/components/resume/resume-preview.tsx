@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import {
   compactSectionText,
   contactLine,
@@ -19,7 +21,11 @@ export function ResumePreview({ resume }: { resume: Resume }) {
           <h2 className="text-2xl font-bold text-[#1F3A5F]">{resume.header.name}</h2>
         ) : (
           <p className="rounded bg-amber-50 px-2 py-1 text-xs text-amber-900">
-            Dein Name fehlt – er wird aus deinem Konto übernommen. Trag ihn dort ein, dann erscheint er hier und im Export.
+            Dein Name fehlt.{" "}
+            <Link href="/profile" className="font-medium underline">
+              Trag ihn in deinem Profil ein
+            </Link>
+            , dann erscheint er hier und im Export.
           </p>
         )}
         {resume.header.headline ? <p className="mt-1">{resume.header.headline}</p> : null}

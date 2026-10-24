@@ -1,5 +1,6 @@
 "use server";
 
+import { z } from "zod";
 import { awardXp, XP_REWARDS } from "@/lib/gamification/xp";
 import { ONBOARDING_STEPS, onboardingStepIdSchema } from "@/lib/onboarding/steps";
 import { profileTargetSchema, type CandidateProfilePatch } from "@/lib/schemas/candidate-profile";
@@ -7,11 +8,19 @@ import { getCurrentUser } from "@/lib/supabase/server";
 import {
   confirmProfileValue,
   ProfileError,
+  setDisplayName,
   setOnboardingStatus,
   updateCandidateProfile,
 } from "./server";
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
+
+/** profiles.display_name allows at most 80 characters; whitespace is collapsed. */
+const displayNameSchema = z
+  .string()
+  .max(200)
+  .transform((name) => name.trim().replace(/\s+/g, " "))
+  .pipe(z.string().max(80));
 
 function failure(error: unknown): ActionResult {
   if (error instanceof ProfileError && error.code === "not_signed_in") {
@@ -60,6 +69,18 @@ export async function completeOnboarding(): Promise<ActionResult> {
 export async function skipOnboarding(): Promise<ActionResult> {
   try {
     await setOnboardingStatus("skipped");
+    return { ok: true };
+  } catch (error) {
+    return failure(error);
+  }
+}
+
+/** Saves the name shown in resumes; an empty name removes it. */
+export async function saveDisplayName(name: unknown): Promise<ActionResult> {
+  const parsed = displayNameSchema.safeParse(name);
+  if (!parsed.success) return { ok: false, error: "Bitte gib einen Namen mit höchstens 80 Zeichen an." };
+  try {
+    await setDisplayName(parsed.data || null);
     return { ok: true };
   } catch (error) {
     return failure(error);

@@ -172,6 +172,31 @@ export async function setOnboardingStatus(status: "completed" | "skipped"): Prom
   );
 }
 
+/**
+ * The signed-in user's name (profiles.display_name), shown in resumes and
+ * exports. Null if not set or not signed in. Deduplicated per request.
+ */
+export const getDisplayName = cache(async (): Promise<string | null> => {
+  const supabase = await createClient();
+  const user = await getCurrentUser();
+  if (!supabase || !user) return null;
+
+  const { data, error } = await supabase.from("profiles").select("display_name").eq("id", user.id).maybeSingle();
+  if (error) console.error("profile: display name read failed", error.code);
+  return data?.display_name?.trim() || null;
+});
+
+/** Sets or (with null) removes the current user's name. Runs as the user (RLS). */
+export async function setDisplayName(name: string | null): Promise<void> {
+  const userId = await requireUserId();
+  const supabase = await createClient();
+  if (!supabase) throw new ProfileError("storage", "Supabase is not configured");
+
+  const { data, error } = await supabase.from("profiles").update({ display_name: name }).eq("id", userId).select("id");
+  if (error) throw new ProfileError("storage", `display name update failed (${error.code})`);
+  if (data.length !== 1) throw new ProfileError("storage", "profiles row is missing");
+}
+
 /** True if the user should be sent to the onboarding chat (never if the profile is unavailable). */
 export async function needsOnboarding(): Promise<boolean> {
   const record = await getCandidateProfileRecord();

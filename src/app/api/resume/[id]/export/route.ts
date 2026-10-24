@@ -1,8 +1,10 @@
 import { z } from "zod";
 
 import { apiError } from "@/lib/api";
+import { getDisplayName } from "@/lib/profile/server";
 import { exportFileName, renderResumeDocx, renderResumePdf } from "@/lib/resume/export";
 import { activeVersionOf, getResumeDocument } from "@/lib/resume/repository";
+import { withName } from "@/lib/resume/tracks";
 import { exportFormatSchema } from "@/lib/schemas/resume";
 import { getCurrentUser } from "@/lib/supabase/server";
 
@@ -32,7 +34,7 @@ export async function GET(request: Request, ctx: RouteContext<"/api/resume/[id]/
   if (!query.success) return apiError(400, "Ungültiges Exportformat.");
 
   try {
-    const doc = await getResumeDocument(id);
+    const [doc, name] = await Promise.all([getResumeDocument(id), getDisplayName()]);
     if (!doc) return apiError(404, "Lebenslauf nicht gefunden.");
     const version =
       query.data.version !== undefined
@@ -41,8 +43,9 @@ export async function GET(request: Request, ctx: RouteContext<"/api/resume/[id]/
     if (!version) return apiError(404, "Diese Version gibt es nicht.");
 
     const { format } = query.data;
-    const file = format === "docx" ? await renderResumeDocx(version.content) : await renderResumePdf(version.content);
-    const fileName = exportFileName(version.content, format);
+    const content = withName(version.content, name);
+    const file = format === "docx" ? await renderResumeDocx(content) : await renderResumePdf(content);
+    const fileName = exportFileName(content, format);
 
     return new Response(new Uint8Array(file), {
       headers: {

@@ -106,6 +106,14 @@ export function withRole(resume: Resume, targetRole: string): Resume {
   return { ...resume, targetRole, header: { ...resume.header, headline: targetRole } };
 }
 
+/**
+ * Shows the account's current name. The name is account data, not resume
+ * content, so a name set after creating the resume appears without regenerating it.
+ */
+export function withName(resume: Resume, name: string | null): Resume {
+  return { ...resume, header: { ...resume.header, name } };
+}
+
 const TRACK_KEYWORDS: Record<ResumeTrack, RegExp[]> = {
   finance: [
     /financ/,
