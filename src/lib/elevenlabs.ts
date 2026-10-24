@@ -3,7 +3,7 @@ import "server-only";
 const API_BASE = "https://api.elevenlabs.io";
 /** Multilingual model: natural German pronunciation. */
 const TTS_MODEL = "eleven_multilingual_v2";
-const STT_MODEL = "scribe_v1";
+const STT_MODEL = "scribe_v2";
 /** Premade voice used if ELEVENLABS_VOICE_ID is not set. */
 const DEFAULT_VOICE_ID = "EXAVITQu4vr4xnSDxMaL";
 
