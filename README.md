@@ -11,7 +11,7 @@ Stack: Next.js 16 (App Router, TypeScript), Tailwind CSS 4, shadcn/ui, Supabase 
 - [x] Schritt 3 – Interview-Prototyp (Consulting): Track-Auswahl, vorgelesene Fragen (ElevenLabs), Aufnahme und Transkription
 - [x] Schritt 4 – Feedback: Auswertung mit Gemma 4 nach Raster, Feedback-Seite, XP
 - [ ] Schritt 5 – Weitere Tracks
-- [ ] Schritt 6 – Lebenslauf-Tab
+- [x] Schritt 6 – Lebenslauf-Tab
 - [ ] Schritt 7 – Charakter-Tab
 - [ ] Schritt 8 – Feinschliff
 
@@ -213,3 +213,9 @@ Statt der gezeichneten Interviewerin kann ein echtes Foto sprechen. Pro vorgeles
 - **Fragentext oder Stimme geändert?** Skript erneut ausführen, es erzeugt nur die betroffenen Clips neu. Bis dahin erscheint für diese Zeilen wieder die gezeichnete Interviewerin.
 - **Neues Foto?** Mit `--force` alle Clips des Tracks neu erzeugen.
 - Name und Rolle der Interviewerin stehen in `src/lib/interview/tracks.ts`.
+
+## Lebenslauf
+
+Drei Lebensläufe pro Nutzer – Finance, Consulting und Startup –, erstellt aus dem Onboarding-Profil. Der Bereich bestimmt Aufbau und Zuschnitt, die Rolle, auf die man sich bewirbt, steht oben im Lebenslauf. Anpassen per Chat (jede Änderung einzeln annehmen oder ablehnen), Versionen, Export als PDF und DOCX. Gemma nutzt nur Angaben aus dem Profil. Details: `docs/handoff/cv-tailoring.md`.
+
+Tests: `npm run test:resume` (Logik) und `npm run db:test:resume` (RLS).

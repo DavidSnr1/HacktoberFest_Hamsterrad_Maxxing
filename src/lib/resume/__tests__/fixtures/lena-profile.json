@@ -1,0 +1,105 @@
+{
+  "personal": {
+    "name": "Lena Becker",
+    "headline": "M.Sc. Management, Schwerpunkt Finance & Strategy",
+    "email": "lena.becker@example.com",
+    "phone": "+49 151 00000000",
+    "location": "München",
+    "links": [{ "label": "LinkedIn", "url": "https://www.linkedin.com/in/example-lena-becker" }]
+  },
+  "education": [
+    {
+      "id": "edu-tum",
+      "institution": "Technische Universität München",
+      "degree": "M.Sc. Management",
+      "field": "Finance & Strategy",
+      "location": "München",
+      "grade": null,
+      "start": "2025-10",
+      "end": null,
+      "details": ["Schwerpunkte: Corporate Finance, Strategisches Management", "Seminararbeit zu Bewertung von Tech-Startups mit DCF und Multiples"]
+    },
+    {
+      "id": "edu-mannheim",
+      "institution": "Universität Mannheim",
+      "degree": "B.Sc. Betriebswirtschaftslehre",
+      "field": null,
+      "location": "Mannheim",
+      "grade": "1,7",
+      "start": "2021-09",
+      "end": "2025-07",
+      "details": ["Auslandssemester an der Copenhagen Business School (2023)", "Bachelorarbeit: Einfluss von Zinsänderungen auf M&A-Aktivität im Mittelstand"]
+    }
+  ],
+  "experience": [
+    {
+      "id": "exp-strategy",
+      "organization": "Beispiel Strategy Partners GmbH",
+      "role": "Praktikantin Strategieberatung",
+      "employmentType": "Praktikum",
+      "location": "Frankfurt am Main",
+      "start": "2024-08",
+      "end": "2024-10",
+      "details": [
+        "Marktanalyse für einen Automobilzulieferer, 40 Experteninterviews ausgewertet",
+        "Excel-Modell zur Kostenbewertung von 3 Standortoptionen gebaut",
+        "Folien für das Abschlussmeeting mit dem Vorstand erstellt"
+      ]
+    },
+    {
+      "id": "exp-bank",
+      "organization": "Musterbank AG",
+      "role": "Werkstudentin Corporate Finance",
+      "employmentType": "Werkstudentin",
+      "location": "Mannheim",
+      "start": "2023-03",
+      "end": "2024-06",
+      "details": [
+        "Unterstützung bei Kreditanalysen für mittelständische Firmenkunden",
+        "Wöchentliches Reporting in Power BI automatisiert, spart ca. 4 Stunden pro Woche",
+        "Branchenrecherchen für Pitchbooks"
+      ]
+    },
+    {
+      "id": "exp-cafe",
+      "organization": "Café Kaffeebohne",
+      "role": "Servicekraft",
+      "employmentType": "Minijob",
+      "location": "Mannheim",
+      "start": "2021-10",
+      "end": "2023-02",
+      "details": ["Service und Kasse im Wochenendbetrieb", "Einarbeitung neuer Kolleg:innen"]
+    }
+  ],
+  "projects": [
+    {
+      "id": "proj-case",
+      "name": "Case-Competition „Strategy Challenge“",
+      "context": "Team aus 4 Studierenden",
+      "start": "2024",
+      "end": "2024",
+      "details": ["2. Platz unter 30 Teams", "Markteintrittsstrategie für einen E-Bike-Hersteller in Skandinavien entwickelt"]
+    }
+  ],
+  "skills": [
+    { "id": "skill-excel", "name": "Excel (Finanzmodellierung)", "category": "Tools", "level": "sehr gut" },
+    { "id": "skill-ppt", "name": "PowerPoint", "category": "Tools", "level": "sehr gut" },
+    { "id": "skill-powerbi", "name": "Power BI", "category": "Tools", "level": "gut" },
+    { "id": "skill-python", "name": "Python (pandas)", "category": "Programmierung", "level": "Grundkenntnisse" },
+    { "id": "skill-dcf", "name": "Unternehmensbewertung (DCF, Multiples)", "category": "Fachlich", "level": null }
+  ],
+  "languages": [
+    { "id": "lang-de", "name": "Deutsch", "level": "Muttersprache" },
+    { "id": "lang-en", "name": "Englisch", "level": "C1" },
+    { "id": "lang-es", "name": "Spanisch", "level": "B1" }
+  ],
+  "other": [
+    {
+      "id": "other-finance-club",
+      "title": "Vorstand Ressort Events, Finance Club Mannheim e. V.",
+      "start": "2022",
+      "end": "2024",
+      "details": ["Organisation von 6 Unternehmensevents pro Semester mit bis zu 120 Teilnehmenden"]
+    }
+  ]
+}

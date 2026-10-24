@@ -188,6 +188,83 @@ export type Database = {
         }
         Relationships: []
       }
+      resume_documents: {
+        Row: {
+          active_version: number
+          created_at: string
+          id: string
+          language: string
+          target_role: string
+          track: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active_version?: number
+          created_at?: string
+          id?: string
+          language?: string
+          target_role: string
+          track: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          active_version?: number
+          created_at?: string
+          id?: string
+          language?: string
+          target_role?: string
+          track?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      resume_versions: {
+        Row: {
+          content: Json
+          created_at: string
+          document_id: string
+          id: string
+          instruction: string | null
+          notes: string | null
+          status: string
+          user_id: string
+          version: number
+        }
+        Insert: {
+          content: Json
+          created_at?: string
+          document_id: string
+          id?: string
+          instruction?: string | null
+          notes?: string | null
+          status: string
+          user_id?: string
+          version: number
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          document_id?: string
+          id?: string
+          instruction?: string | null
+          notes?: string | null
+          status?: string
+          user_id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resume_versions_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "resume_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       resumes: {
         Row: {
           created_at: string
