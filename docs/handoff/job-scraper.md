@@ -7,6 +7,7 @@ TEAM-KONTEXT 4C hat das Scraping von LinkedIn, Indeed und StepStone ursprünglic
 - `JOBS_ENABLE_SCRAPED_SOURCES=false` schaltet die drei Adapter ab; ohne die Variable oder mit `true` laufen sie mit.
 - Die Adapter umgehen keinen Bot-Schutz: kein Captcha-Lösen, keine Stealth-Tricks, keine Proxys, keine gefälschten Browser- oder App-Kennungen. Sie senden einen eigenen, ehrlichen User-Agent. Zeigt ein Portal eine Prüfseite oder antwortet mit 403/429, meldet der Adapter „blockiert“ und die anderen Quellen liefern weiter.
 - **Indeed-Beispielstellen (entschieden von David am 2026-10-24):** Ist Indeed blockiert oder nicht erreichbar, liefert der Adapter 5 erfundene Stellen passend zur Suche (`src/lib/jobs/sources/indeed-mock.ts`). Sie haben die Quelle `indeed-demo`, Platzhalterfirmen („Muster …“), das Badge „Indeed · Beispiel“ und verlinken auf die echte Indeed-Suche („Auf Indeed suchen“). Die Quellenzeile zeigt „Indeed (Beispieldaten)“. Außerdem füllt die Suche jede Trefferliste mit weiteren Beispielstellen auf **mindestens 10** auf; sie stehen hinter den echten Treffern. `JOBS_INDEED_MOCK=false` schaltet beides ab, dann erscheint Indeed wieder als „blockiert“.
+- **Demo-Modus (entschieden von David am 2026-10-24, die App wird als Demo gezeigt, nicht live):** Mit `JOBS_DEMO_MODE=true` haben die Beispielstellen erfundene, realistisch klingende Firmennamen (keine echten Firmen), die Quelle `indeed` und keine Kennzeichnung. **Vor einem Livegang muss der Schalter aus sein**, sonst halten Nutzer erfundene Stellen für echt.
 - Entfernen ginge weiterhin ohne Umbau: die drei Dateien `src/lib/jobs/sources/{linkedin,indeed,stepstone}.ts` löschen und die Einträge in `sources/index.ts` streichen.
 
 ## 1. Was gebaut wurde
@@ -65,6 +66,8 @@ Am Ende von `.env.example` anhängen:
 # --- Feature C – Stellen-Scraper ---
 # LinkedIn/Indeed/StepStone-Adapter (siehe docs/handoff/job-scraper.md). Standard: an, false schaltet sie ab.
 JOBS_ENABLE_SCRAPED_SOURCES=true
+# Nur für Demos: Beispielstellen sehen aus wie normale Indeed-Treffer. Vor einem Livegang auf false.
+JOBS_DEMO_MODE=false
 # Indeed blockiert fast immer; dann zeigt der Tab Beispielstellen (als „Beispiel“ markiert) und füllt auf mind. 10 Treffer auf. false: beides aus.
 JOBS_INDEED_MOCK=true
 # Optional: Adzuna API (https://developer.adzuna.com), kostenloser Key

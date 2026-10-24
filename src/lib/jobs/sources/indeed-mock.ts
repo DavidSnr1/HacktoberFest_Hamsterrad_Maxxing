@@ -10,12 +10,17 @@ import {
 } from "@/lib/schemas/job-posting";
 import { mergeResults } from "../merge";
 import { detectEmploymentType, detectTrack } from "../normalize";
+import { jobsDemoMode } from "./flags";
 
 // Example postings shown while Indeed blocks our requests (see indeed.ts) and to top up short result
 // lists (see search.ts). They are deterministic per query, use placeholder companies ("Muster …") and
 // are stored under their own source id, so the UI can label them as examples and never loads an Indeed
 // detail page for them. Index n always yields the same posting, so both callers share ids.
+// Demo mode (JOBS_DEMO_MODE=true, for presentations only) uses fictional but realistic company names
+// and the plain "indeed" source, so the examples look like ordinary results.
 const MAX_COUNT = 10;
+// Lets the Indeed adapter recognise demo-mode examples, which are stored under source "indeed".
+export const DEMO_ID_PREFIX = "demo-";
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 type MockType = Exclude<EmploymentType, "other">;
@@ -72,6 +77,58 @@ const COMPANIES: Record<JobTrack | "none", string[]> = {
     "Muster Medien GmbH",
     "Muster Software GmbH",
     "Muster Pharma AG",
+  ],
+};
+
+// Fictional names for demo mode. Deliberately no real companies.
+const DEMO_COMPANIES: Record<JobTrack | "none", string[]> = {
+  consulting: [
+    "Corvant Consulting GmbH",
+    "Lindqvist & Partner",
+    "Haldenberg Strategy Partners",
+    "Nexora Advisory AG",
+    "Brennwald Management Consultants",
+    "Aurelis Consulting GmbH",
+    "Tessmar & Co. Strategieberatung",
+    "Veltra Partners",
+    "Kronfeld Advisory GmbH",
+    "Solvaris Beratung GmbH",
+  ],
+  finance: [
+    "Rheinhafen Capital GmbH",
+    "Nordkap Asset Management",
+    "Talheim Corporate Finance AG",
+    "Varenne Investment Partners",
+    "Elbstein Privatbank AG",
+    "Kestrel Equity Partners",
+    "Mainstein Treasury Services",
+    "Hollweg Wirtschaftsprüfung GmbH",
+    "Severin Capital Partners",
+    "Aldmoor Invest AG",
+  ],
+  startup: [
+    "Loopwise GmbH",
+    "Fieldnote Labs",
+    "Klarwerk GmbH",
+    "Peakroute GmbH",
+    "Brightbase Technologies",
+    "Tandemly GmbH",
+    "Nuvio Health GmbH",
+    "Greenlane Mobility GmbH",
+    "Paylio GmbH",
+    "Stacklane AI GmbH",
+  ],
+  none: [
+    "Weidner Gruppe",
+    "Novatek Systems GmbH",
+    "Bergsdorf Industries AG",
+    "Lumio Digital GmbH",
+    "Westhoff Logistik AG",
+    "Kaltenbach Energie GmbH",
+    "Vireo Software GmbH",
+    "Altenau Automotive AG",
+    "Sandor Medien GmbH",
+    "Belmonte Pharma AG",
   ],
 };
 
@@ -139,12 +196,13 @@ export function buildMockResults(
   searchUrl: string,
   count = MAX_COUNT,
   now = new Date(),
+  demoMode = jobsDemoMode(),
 ): JobPostingDraft[] {
   // Without filters, take type and track from the query ("Praktikum Consulting").
   const queryType = params.q ? detectEmploymentType(params.q) : null;
   const track = params.track ?? (params.q ? detectTrack(params.q) : null) ?? "none";
   const focuses = focusFrom(params.q, track);
-  const companies = COMPANIES[track];
+  const companies = (demoMode ? DEMO_COMPANIES : COMPANIES)[track];
   const hash = queryHash(params);
   const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
 
@@ -154,8 +212,8 @@ export function buildMockResults(
     const company = companies[index % companies.length]!;
     const location = params.location ?? LOCATIONS[index % LOCATIONS.length]!;
     return {
-      source: INDEED_DEMO_SOURCE,
-      sourceId: `${hash}-${index}`,
+      source: demoMode ? "indeed" : INDEED_DEMO_SOURCE,
+      sourceId: `${DEMO_ID_PREFIX}${hash}-${index}`,
       sourceUrl: searchUrl,
       title: titleFor(type, focus),
       company,

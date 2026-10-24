@@ -9,3 +9,9 @@ export function scrapedSourcesEnabled(): boolean {
 export function indeedMockEnabled(): boolean {
   return process.env.JOBS_INDEED_MOCK !== "false";
 }
+
+// Presentation mode, decided on 2026-10-24: the app is shown as a demo, not live. Example postings
+// then look like ordinary Indeed results. Never enable this for real users.
+export function jobsDemoMode(): boolean {
+  return process.env.JOBS_DEMO_MODE === "true";
+}
