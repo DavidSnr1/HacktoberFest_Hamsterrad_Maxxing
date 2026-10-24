@@ -1,0 +1,139 @@
+{
+  "schemaVersion": 1,
+  "basics": {
+    "location": {
+      "value": "Mannheim",
+      "source": "user",
+      "sourceRef": null,
+      "confirmed": true,
+      "updatedAt": "2026-10-24T14:02:11Z"
+    }
+  },
+  "education": [
+    {
+      "id": "0b9a3c7e-5d1f-4c2a-9e8b-1f2d3c4b5a60",
+      "value": {
+        "institution": "Universität Mannheim",
+        "degree": "master",
+        "field": "BWL (Mannheim Master in Management)",
+        "semester": 2,
+        "expectedGraduation": "2027-09"
+      },
+      "source": "user",
+      "sourceRef": null,
+      "confirmed": true,
+      "updatedAt": "2026-10-24T14:03:40Z"
+    },
+    {
+      "id": "6f1e2d3c-4b5a-4c69-8877-a1b2c3d4e5f6",
+      "value": {
+        "institution": "Goethe-Universität Frankfurt",
+        "degree": "bachelor",
+        "field": "Wirtschaftswissenschaften",
+        "semester": null,
+        "expectedGraduation": "2025-07"
+      },
+      "source": "resume",
+      "sourceRef": "3c2b1a09-8f7e-4d6c-b5a4-938271605f4e",
+      "confirmed": true,
+      "updatedAt": "2026-10-24T14:21:05Z"
+    }
+  ],
+  "skills": [
+    {
+      "id": "a1c4e7f0-2b5d-4e8a-9c1f-3e6b9d2a5c80",
+      "value": "Excel-Modellierung (DCF, Szenarioanalysen)",
+      "source": "user",
+      "sourceRef": null,
+      "confirmed": true,
+      "updatedAt": "2026-10-24T14:05:02Z"
+    },
+    {
+      "id": "b2d5f8a1-3c6e-4f9b-8d2a-4f7c0e3b6d91",
+      "value": "PowerPoint (Storylining, Slide-Design)",
+      "source": "user",
+      "sourceRef": null,
+      "confirmed": true,
+      "updatedAt": "2026-10-24T14:05:02Z"
+    },
+    {
+      "id": "c3e6a9b2-4d7f-4a0c-9e3b-5a8d1f4c7e02",
+      "value": "SQL",
+      "source": "resume",
+      "sourceRef": "3c2b1a09-8f7e-4d6c-b5a4-938271605f4e",
+      "confirmed": false,
+      "updatedAt": "2026-10-24T14:21:05Z"
+    },
+    {
+      "id": "d4f7b0c3-5e8a-4b1d-8f4c-6b9e2a5d8f13",
+      "value": "Python (pandas)",
+      "source": "experience",
+      "sourceRef": "7e6d5c4b-3a29-4180-9f8e-7d6c5b4a3921",
+      "confirmed": false,
+      "updatedAt": "2026-10-24T14:35:47Z"
+    }
+  ],
+  "languages": [
+    {
+      "id": "e5a8c1d4-6f9b-4c2e-9a5d-7c0f3b6e9a24",
+      "value": { "language": "Deutsch", "level": "native" },
+      "source": "user",
+      "sourceRef": null,
+      "confirmed": true,
+      "updatedAt": "2026-10-24T14:06:18Z"
+    },
+    {
+      "id": "f6b9d2e5-7a0c-4d3f-8b6e-8d1a4c7f0b35",
+      "value": { "language": "Englisch", "level": "C1" },
+      "source": "user",
+      "sourceRef": null,
+      "confirmed": true,
+      "updatedAt": "2026-10-24T14:06:18Z"
+    },
+    {
+      "id": "07c0e3f6-8b1d-4e4a-9c7f-9e2b5d8a1c46",
+      "value": { "language": "Französisch", "level": "B1" },
+      "source": "resume",
+      "sourceRef": "3c2b1a09-8f7e-4d6c-b5a4-938271605f4e",
+      "confirmed": false,
+      "updatedAt": "2026-10-24T14:21:05Z"
+    }
+  ],
+  "goals": {
+    "tracks": {
+      "value": ["consulting", "finance"],
+      "source": "user",
+      "sourceRef": null,
+      "confirmed": true,
+      "updatedAt": "2026-10-24T14:04:02Z"
+    },
+    "employmentTypes": {
+      "value": ["internship", "working_student"],
+      "source": "user",
+      "sourceRef": null,
+      "confirmed": true,
+      "updatedAt": "2026-10-24T14:04:30Z"
+    },
+    "preferredLocations": {
+      "value": ["Frankfurt am Main", "München", "Mannheim"],
+      "source": "user",
+      "sourceRef": null,
+      "confirmed": true,
+      "updatedAt": "2026-10-24T14:04:55Z"
+    },
+    "remoteOk": {
+      "value": true,
+      "source": "user",
+      "sourceRef": null,
+      "confirmed": true,
+      "updatedAt": "2026-10-24T14:05:10Z"
+    },
+    "earliestStart": {
+      "value": "2027-03",
+      "source": "user",
+      "sourceRef": null,
+      "confirmed": true,
+      "updatedAt": "2026-10-24T14:05:21Z"
+    }
+  }
+}
