@@ -49,9 +49,9 @@ function DesktopNavList({ active }: NavListProps) {
               href={href}
               aria-current={active === href ? "page" : undefined}
               className={cn(
-                "relative flex h-14 items-center gap-2 px-3 text-sm font-medium text-primary-foreground/70 transition-colors hover:text-primary-foreground",
+                "relative flex h-14 items-center gap-2 px-3 text-sm font-medium text-white/70 transition-colors hover:text-white",
                 active === href &&
-                  "text-primary-foreground after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:bg-gold",
+                  "text-white after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:bg-gold",
               )}
             >
               <Icon className="size-4" aria-hidden />

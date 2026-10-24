@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Brand } from "@/components/brand";
+import { TrendLine } from "@/components/trend-line";
 import {
   Card,
   CardContent,
@@ -29,7 +30,8 @@ export default function LoginPage({ searchParams }: PageProps<"/login">) {
 
   return (
     <main className="grid flex-1 lg:grid-cols-[1.1fr_1fr]">
-      <section className="hidden flex-col justify-between gap-12 bg-primary p-10 text-primary-foreground lg:flex xl:p-14">
+      <section className="graph-paper relative isolate hidden flex-col justify-between gap-12 overflow-hidden bg-navy p-10 text-white [--grid-major:oklch(1_0_0/0.08)] [--grid-minor:oklch(1_0_0/0.035)] lg:flex xl:p-14">
+        <TrendLine className="absolute inset-x-0 top-[18%] -z-10 h-[38%] w-full" />
         <Brand />
         <div className="flex max-w-lg flex-col gap-5">
           <p className="flex items-center gap-2 text-[0.7rem] font-semibold tracking-[0.14em] text-gold uppercase">
@@ -42,7 +44,7 @@ export default function LoginPage({ searchParams }: PageProps<"/login">) {
           <dl className="mt-6 grid grid-cols-3 gap-6 border-t border-white/15 pt-6">
             {HIGHLIGHTS.map((item) => (
               <div key={item.term} className="flex flex-col gap-1">
-                <dt className="text-[0.7rem] font-semibold tracking-[0.12em] text-primary-foreground/60 uppercase">
+                <dt className="text-[0.7rem] font-semibold tracking-[0.12em] text-white/60 uppercase">
                   {item.term}
                 </dt>
                 <dd className="text-sm leading-snug">{item.detail}</dd>
@@ -53,7 +55,7 @@ export default function LoginPage({ searchParams }: PageProps<"/login">) {
       </section>
 
       <section className="flex flex-col items-center justify-center gap-8 px-4 py-10">
-        <div className="rounded-md bg-primary px-4 py-3 text-primary-foreground lg:hidden">
+        <div className="rounded-md bg-navy px-4 py-3 text-white lg:hidden">
           <Brand />
         </div>
         <Card className="w-full max-w-sm">
