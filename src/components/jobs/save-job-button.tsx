@@ -9,15 +9,17 @@ type Props = {
   pending: boolean;
   onToggle: () => void;
   withLabel?: boolean;
+  className?: string;
 };
 
-export function SaveJobButton({ saved, pending, onToggle, withLabel = false }: Props) {
+export function SaveJobButton({ saved, pending, onToggle, withLabel = false, className }: Props) {
   const label = saved ? "Gemerkt" : "Merken";
   return (
     <Button
       type="button"
-      variant={saved ? "secondary" : "outline"}
-      size={withLabel ? "default" : "icon"}
+      variant={saved ? "secondary" : withLabel ? "outline" : "ghost"}
+      size={withLabel ? "lg" : "icon"}
+      className={className}
       disabled={pending}
       aria-pressed={saved}
       aria-label={saved ? "Nicht mehr merken" : "Stelle merken"}

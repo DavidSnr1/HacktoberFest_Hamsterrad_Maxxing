@@ -66,6 +66,24 @@ export function formatDate(iso: string | null): string | null {
   return Number.isNaN(date.getTime()) ? null : dateFormat.format(date);
 }
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function startOfDay(date: Date): number {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+}
+
+// "heute", "gestern", "vor 5 Tagen"; anything older than two weeks as a date.
+export function formatRelativeDate(iso: string | null, now = new Date()): string | null {
+  if (!iso) return null;
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return null;
+  const days = Math.round((startOfDay(now) - startOfDay(date)) / DAY_MS);
+  if (days <= 0) return "heute";
+  if (days === 1) return "gestern";
+  if (days < 14) return `vor ${days} Tagen`;
+  return dateFormat.format(date);
+}
+
 // "2027-03" -> "03/2027"
 export function formatMonth(month: string): string {
   const [year, monthNumber] = month.split("-");

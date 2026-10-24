@@ -10,8 +10,9 @@ import { EMPLOYMENT_TYPES, JOB_TRACKS } from "@/lib/schemas/job-posting";
 import type { SearchForm } from "./jobs-api";
 import { EMPLOYMENT_TYPE_LABELS, TRACK_LABELS } from "./labels";
 
+// Same look as <Input>, one step taller to match the search bar.
 const selectClassName =
-  "h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:opacity-50";
+  "h-9 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50 dark:bg-input/30";
 
 export const EMPTY_SEARCH_FORM: SearchForm = { q: "", location: "", track: "", type: "" };
 
@@ -54,11 +55,12 @@ export function JobSearchForm({ loading, onSearch, initial = EMPTY_SEARCH_FORM, 
     : [];
 
   return (
-    <form onSubmit={submit} className="space-y-3">
+    <form onSubmit={submit} className="space-y-4 rounded-xl bg-card p-4 shadow-xs ring-1 ring-foreground/10 sm:p-5">
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[2fr_1.5fr_1fr_1fr_auto] lg:items-end">
         <label className="grid gap-1.5 text-sm font-medium">
           Was suchst du?
           <Input
+            className="h-9"
             value={form.q}
             onChange={(event) => update("q", event.target.value)}
             placeholder="z. B. Strategy, Data Analyst, Marketing"
@@ -68,6 +70,7 @@ export function JobSearchForm({ loading, onSearch, initial = EMPTY_SEARCH_FORM, 
         <label className="grid gap-1.5 text-sm font-medium">
           Ort
           <Input
+            className="h-9"
             value={form.location}
             onChange={(event) => update("location", event.target.value)}
             placeholder="z. B. München"
@@ -96,14 +99,14 @@ export function JobSearchForm({ loading, onSearch, initial = EMPTY_SEARCH_FORM, 
             ))}
           </select>
         </label>
-        <Button type="submit" disabled={loading || empty} className="sm:col-span-2 lg:col-span-1">
+        <Button type="submit" size="lg" disabled={loading || empty} className="sm:col-span-2 lg:col-span-1 lg:px-4">
           <SearchIcon aria-hidden />
           {loading ? "Suche läuft …" : "Suchen"}
         </Button>
       </div>
 
       {groups.length > 0 && (
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-t pt-4 text-sm">
           <span className="flex items-center gap-1.5 text-muted-foreground">
             <UserRoundIcon className="size-4" aria-hidden />
             Aus deinem Profil:

@@ -12,11 +12,11 @@ export function JobFacts({ insights }: { insights: JobInsights }) {
 
   if (items.length === 0) return null;
   return (
-    <dl className="grid gap-x-4 gap-y-2 text-sm sm:grid-cols-[auto_1fr]">
+    <dl className="grid grid-cols-2 gap-2">
       {items.map((item) => (
-        <div key={item.label} className="contents">
-          <dt className="text-muted-foreground">{item.label}</dt>
-          <dd>{item.value}</dd>
+        <div key={item.label} className="rounded-lg bg-muted/60 px-3 py-2">
+          <dt className="text-xs text-muted-foreground">{item.label}</dt>
+          <dd className="mt-0.5 font-medium">{item.value}</dd>
         </div>
       ))}
     </dl>
