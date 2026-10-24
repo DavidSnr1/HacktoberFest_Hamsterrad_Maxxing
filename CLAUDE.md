@@ -2,6 +2,8 @@
 
 Diese Datei ist deine Arbeitsgrundlage. Lies sie vollständig, bevor du Code schreibst, und halte dich an die Regeln und die Reihenfolge der Bauschritte.
 
+> **Arbeitest du auf einem Feature-Branch (`feature/*`)?** Dann lies danach `docs/TEAM-KONTEXT.md`. Sie regelt die parallele Entwicklung im Team und geht bei Widersprüchen vor.
+
 ---
 
 ## 1. Produktvision

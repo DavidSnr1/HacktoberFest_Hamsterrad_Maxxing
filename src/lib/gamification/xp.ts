@@ -9,6 +9,9 @@ export const XP_REWARDS = {
   interviewFinished: 100,
   /** Per point of the overall feedback score (1-5), so 20-100 XP. */
   feedbackScorePerPoint: 20,
+  resumeUploaded: 50,
+  experienceRecorded: 30,
+  resumeTailored: 80,
 } as const;
 
 export function feedbackScoreXp(overall: number) {
