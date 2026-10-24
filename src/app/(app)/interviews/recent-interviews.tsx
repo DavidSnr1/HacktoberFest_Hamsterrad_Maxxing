@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ChevronRightIcon } from "lucide-react";
+import { TRACK_COLORS } from "@/components/interview/track-colors";
 import { TRACKS } from "@/lib/interview/tracks";
 import type { Enums } from "@/lib/supabase/database.types";
 import { createClient } from "@/lib/supabase/server";
@@ -72,7 +73,10 @@ export async function RecentInterviews() {
                 className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/60 sm:gap-4"
               >
                 <div className="flex min-w-0 flex-1 flex-col sm:flex-row sm:items-center sm:gap-4">
-                  <span className="font-medium sm:w-36">{TRACKS[interview.track].label}</span>
+                  <span className={cn("flex items-center gap-2 font-medium sm:w-36", TRACK_COLORS[interview.track])}>
+                    <span className="size-2.5 shrink-0 rounded-[2px] bg-(--track)" aria-hidden />
+                    {TRACKS[interview.track].label}
+                  </span>
                   <span className="text-sm text-muted-foreground tabular-nums sm:flex-1">
                     {dateFormat.format(new Date(interview.started_at))}
                     {duration && <span className="sm:hidden"> · {duration}</span>}
