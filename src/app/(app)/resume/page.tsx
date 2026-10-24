@@ -39,6 +39,7 @@ export default async function ResumePage({ searchParams }: PageProps<"/resume">)
     documents.map((doc) => [doc.track, { id: doc.id, language: doc.language, targetRole: doc.targetRole }]),
   );
   const profileMissing = !profile || isProfileEmpty(profile);
+  const stationsMissing = Boolean(profile && !profile.experience.length && !profile.projects.length && !profile.other.length);
 
   return (
     <div className="space-y-8">
@@ -63,6 +64,7 @@ export default async function ResumePage({ searchParams }: PageProps<"/resume">)
           key={`${initialTrack ?? "none"}-${initialRole ?? ""}`}
           existing={existing}
           consentGranted={consentGranted}
+          stationsMissing={stationsMissing}
           initialRole={initialRole}
           initialTrack={initialTrack}
         />

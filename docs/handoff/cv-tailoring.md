@@ -33,10 +33,11 @@ Das Feature wurde neu ausgerichtet. Die Daten über die Person werden **nicht** 
 
 **Profilformat** (Endformat aus dem Onboarding, `schemaVersion: 1`, Beispiel: `src/lib/resume/fixtures/candidate-profile.example.json`):
 - Jeder Wert ist `{ id?, value, source, sourceRef, confirmed, updatedAt }`.
-- Genutzt werden `basics.location`, `education[]` (Abschluss-Code, Fach, Semester, voraussichtlicher Abschluss), `skills[]` und `languages[]` (Niveau A1–C2/`native`). `goals` gehört zur Stellensuche und wird hier nicht genutzt.
+- Genutzt werden `basics.location`, `education[]` (Abschluss-Code, Fach, Semester, voraussichtlicher Abschluss), `experience[]`, `projects[]`, `volunteering[]`, `skills[]` und `languages[]` (Niveau A1–C2/`native`). `goals` gehört zur Stellensuche und wird hier nicht genutzt.
+- Stationen (`experience`, `projects`, `volunteering`) haben `start`/`end` (JJJJ-MM; `end: null` mit Start = „heute“) und `details[]`: was die Person dort gemacht hat, ein Punkt pro Eintrag. Nur daraus entstehen die Bulletpoints. Ehrenamt wird intern zur Art `other` und erscheint im Abschnitt „Engagement“. Bei `experience.type` (`internship`, `working_student`, …) übersetzt `resolveResume` den Code in die Sprache des Lebenslaufs.
 - Gelesen und auf das interne Format (`resumeProfileSchema` in `src/lib/schemas/resume.ts`) umgesetzt wird es **nur** in `src/lib/resume/candidate-profile.ts`.
 - **Name und E-Mail stehen nicht im Profil.** Der Name kommt aus `profiles.display_name` (auf `/profile` eintragbar, gelesen über `getDisplayName`); Vorschau und Export zeigen immer den aktuellen Namen (`withName`), auch in älteren Versionen. Die E-Mail kommt aus dem Konto (`getCurrentUser().email`). Fehlt der Name, zeigt die Vorschau einen Hinweis, und der Export lässt die Zeile weg.
-- **Das Format enthält keine Praxiserfahrung und keine Projekte.** Lebensläufe bestehen deshalb aus Zusammenfassung, Ausbildung, Kenntnissen und Sprachen; fehlende Praxis taucht in den `gaps` auf. Die Logik für Erfahrungen/Projekte ist intern vorhanden: Kommt das Format später um solche Felder hinzu, muss nur `toResumeProfile` sie mitmappen.
+- **Praxiserfahrung, Projekte und Ehrenamt** fragt das Onboarding seit Oktober 2026 direkt nach der Ausbildung ab (`src/lib/onboarding/steps.ts`, Formularlogik in `src/lib/onboarding/stations.ts`). Ältere Profile ohne diese Listen bleiben gültig (Zod-Default `[]`); wer sie nachtragen will, startet das Onboarding auf `/profile` erneut.
 
 **Änderungen im Chat:** Gemma liefert eine komplette neue Fassung. Die Liste der Änderungen berechnet `diffResumes` deterministisch, und `mergeResumes` übernimmt nur die angenommenen. Pro Lebenslauf gibt es höchstens einen offenen Entwurf; „Neu erstellen“ und ein Rollenwechsel verwerfen ihn.
 

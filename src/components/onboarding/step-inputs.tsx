@@ -1,11 +1,29 @@
 "use client";
 
 import { useState, type FormEvent, type KeyboardEvent } from "react";
-import { PlusIcon, SendHorizontalIcon, Trash2Icon, XIcon } from "lucide-react";
+import { PencilIcon, PlusIcon, SendHorizontalIcon, Trash2Icon, XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { DEGREE_OPTIONS, LANGUAGE_LEVEL_OPTIONS, type StepInput } from "@/lib/onboarding/steps";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  buildStation,
+  EMPTY_STATION_DRAFT,
+  isBlankDraft,
+  MAX_STATIONS,
+  splitMonth,
+  STATION_FORMS,
+  stationFromValue,
+  type StationDraft,
+  type StationEntry,
+} from "@/lib/onboarding/stations";
+import {
+  DEGREE_OPTIONS,
+  EXPERIENCE_TYPE_OPTIONS,
+  LANGUAGE_LEVEL_OPTIONS,
+  type StationKind,
+  type StepInput,
+} from "@/lib/onboarding/steps";
 import type { EducationValue, LanguageValue } from "@/lib/schemas/candidate-profile";
 import { cn } from "@/lib/utils";
 
@@ -38,6 +56,10 @@ export function StepInputView({
   switch (input.kind) {
     case "education":
       return <EducationInput initial={initial as EducationValue | undefined} disabled={disabled} onSubmit={onSubmit} />;
+    case "stations":
+      return (
+        <StationsInput station={input.station} initial={initial as unknown[] | undefined} disabled={disabled} onSubmit={onSubmit} />
+      );
     case "text":
       return (
         <TextInput placeholder={input.placeholder} initial={initial as string | undefined} disabled={disabled} onSubmit={onSubmit} />
@@ -232,14 +254,16 @@ function MonthSelect({
   disabled,
   idPrefix,
   yearsFrom,
+  yearCount = 8,
 }: {
   value: { month: string; year: string };
   onChange: (value: { month: string; year: string }) => void;
   disabled: boolean;
   idPrefix: string;
   yearsFrom: number;
+  yearCount?: number;
 }) {
-  const years = Array.from({ length: 8 }, (_, i) => String(yearsFrom + i));
+  const years = Array.from({ length: yearCount }, (_, i) => String(yearsFrom + i));
   return (
     <div className="grid grid-cols-2 gap-2">
       <select
@@ -274,11 +298,6 @@ function MonthSelect({
     </div>
   );
 }
-
-const splitMonth = (value: string | null | undefined) => {
-  const [year = "", month = ""] = value?.split("-") ?? [];
-  return { year, month };
-};
 
 const thisYear = new Date().getFullYear();
 
@@ -450,6 +469,231 @@ function LanguagesInput({ initial, disabled, onSubmit }: InputProps<LanguageValu
         </Button>
       </div>
       {incomplete && <p className="text-xs text-muted-foreground">Bitte wähle für jede Sprache ein Niveau.</p>}
+    </div>
+  );
+}
+
+/** Stations reach back about twelve years and one year ahead (e.g. an internship that is already signed). */
+const STATION_YEARS_FROM = thisYear - 12;
+const STATION_YEAR_COUNT = 14;
+
+/**
+ * List of stations (experience, projects or volunteering). The form holds one
+ * entry at a time; "Weiter" also takes over a filled-in form, so a single
+ * station needs no extra click.
+ */
+function StationsInput({ station, initial, disabled, onSubmit }: InputProps<unknown[]> & { station: StationKind }) {
+  const form = STATION_FORMS[station];
+  const [entries, setEntries] = useState<StationEntry[]>(() =>
+    (initial ?? []).flatMap((value) => stationFromValue(station, value) ?? []),
+  );
+  const [draft, setDraft] = useState<StationDraft>(EMPTY_STATION_DRAFT);
+  const [formOpen, setFormOpen] = useState(!initial?.length);
+  const [problem, setProblem] = useState<string | null>(null);
+  const blank = isBlankDraft(draft);
+  const id = (field: string) => `${station}-${field}`;
+
+  const update = (patch: Partial<StationDraft>) => {
+    setDraft((current) => ({ ...current, ...patch }));
+    setProblem(null);
+  };
+
+  /** Adds the filled-in form to the list; returns the new list, or null if the form is invalid. */
+  function addDraft(): StationEntry[] | null {
+    if (blank) return entries;
+    const result = buildStation(station, draft);
+    if (!result.ok) {
+      setProblem(result.problem);
+      return null;
+    }
+    const next = [...entries, result.entry];
+    setEntries(next);
+    setDraft(EMPTY_STATION_DRAFT);
+    setFormOpen(false);
+    return next;
+  }
+
+  function submit() {
+    const list = addDraft();
+    if (!list) return;
+    onSubmit(
+      list.map((entry) => entry.value),
+      list.length ? list.map((entry) => entry.text).join("; ") : "Keine Angaben",
+    );
+  }
+
+  function edit(index: number) {
+    setDraft(entries[index].draft);
+    setEntries((current) => current.filter((_, i) => i !== index));
+    setFormOpen(true);
+    setProblem(null);
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      {/* Scrolls on small screens so the buttons below stay visible. */}
+      <div className="flex max-h-[55dvh] flex-col gap-3 overflow-y-auto p-0.5">
+        {entries.length > 0 && (
+          <ul className="flex flex-col gap-2">
+            {entries.map((entry, index) => (
+              <li key={`${index}-${entry.text}`} className="flex items-center gap-1 rounded-lg border py-1.5 pr-1.5 pl-3 text-sm">
+                <span className="min-w-0 flex-1">{entry.text}</span>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => edit(index)}
+                  disabled={disabled || !blank}
+                  aria-label={`${entry.text} bearbeiten`}
+                >
+                  <PencilIcon />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => setEntries((current) => current.filter((_, i) => i !== index))}
+                  disabled={disabled}
+                  aria-label={`${entry.text} entfernen`}
+                >
+                  <Trash2Icon />
+                </Button>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {formOpen ? (
+          <div className="grid gap-3 rounded-lg border p-3 sm:grid-cols-2">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor={id("title")}>{form.title.label}</Label>
+              <Input
+                id={id("title")}
+                value={draft.title}
+                onChange={(e) => update({ title: e.target.value })}
+                placeholder={form.title.placeholder}
+                maxLength={200}
+                disabled={disabled}
+                className="h-10"
+                autoFocus
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor={id("place")}>{form.place.label}</Label>
+              <Input
+                id={id("place")}
+                value={draft.place}
+                onChange={(e) => update({ place: e.target.value })}
+                placeholder={form.place.placeholder}
+                maxLength={200}
+                disabled={disabled}
+                className="h-10"
+              />
+            </div>
+            {form.extended && (
+              <>
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor={id("type")}>Art (optional)</Label>
+                  <select
+                    id={id("type")}
+                    className={selectClass}
+                    value={draft.type}
+                    onChange={(e) => update({ type: e.target.value })}
+                    disabled={disabled}
+                  >
+                    <option value="">Keine Angabe</option>
+                    {EXPERIENCE_TYPE_OPTIONS.map((o) => (
+                      <option key={o.value} value={o.value}>
+                        {o.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor={id("location")}>Ort (optional)</Label>
+                  <Input
+                    id={id("location")}
+                    value={draft.location}
+                    onChange={(e) => update({ location: e.target.value })}
+                    placeholder="z. B. München"
+                    maxLength={100}
+                    disabled={disabled}
+                    className="h-10"
+                  />
+                </div>
+              </>
+            )}
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor={id("start-month")}>{form.startRequired ? "Von" : "Von (optional)"}</Label>
+              <MonthSelect
+                value={draft.start}
+                onChange={(start) => update({ start })}
+                disabled={disabled}
+                idPrefix={id("start")}
+                yearsFrom={STATION_YEARS_FROM}
+                yearCount={STATION_YEAR_COUNT}
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor={id("end-month")}>Bis</Label>
+              <MonthSelect
+                value={draft.end}
+                onChange={(end) => update({ end })}
+                disabled={disabled || draft.ongoing}
+                idPrefix={id("end")}
+                yearsFrom={STATION_YEARS_FROM}
+                yearCount={STATION_YEAR_COUNT}
+              />
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={draft.ongoing}
+                  onChange={(e) => update({ ongoing: e.target.checked, end: { month: "", year: "" } })}
+                  disabled={disabled}
+                  className="size-4 accent-primary"
+                />
+                läuft noch
+              </label>
+            </div>
+            <div className="flex flex-col gap-1.5 sm:col-span-2">
+              <Label htmlFor={id("details")}>{form.details.label}</Label>
+              <Textarea
+                id={id("details")}
+                value={draft.details}
+                onChange={(e) => update({ details: e.target.value })}
+                placeholder={form.details.placeholder}
+                maxLength={2500}
+                rows={3}
+                disabled={disabled}
+              />
+              <p className="text-xs text-muted-foreground">
+                Nur das, was stimmt: Dein Lebenslauf wird ausschließlich aus diesen Angaben formuliert.
+              </p>
+            </div>
+            <Button variant="outline" className="sm:col-span-2 sm:justify-self-start" onClick={() => void addDraft()} disabled={disabled || blank}>
+              <PlusIcon />
+              {form.add}
+            </Button>
+          </div>
+        ) : (
+          <Button
+            variant="outline"
+            className="self-start"
+            onClick={() => setFormOpen(true)}
+            disabled={disabled || entries.length >= MAX_STATIONS}
+          >
+            <PlusIcon />
+            {form.addAnother}
+          </Button>
+        )}
+      </div>
+
+      {problem && (
+        <p className="text-xs text-destructive" role="alert">
+          {problem}
+        </p>
+      )}
+      <Button className="h-10 self-end px-4" onClick={submit} disabled={disabled}>
+        {entries.length === 0 && blank ? "Keine, weiter" : "Weiter"}
+      </Button>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { DownloadIcon, Loader2Icon, PencilIcon, RefreshCwIcon, SendIcon, Trash2Icon, TriangleAlertIcon } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
@@ -12,6 +13,7 @@ import { TRACK_TEMPLATES } from "@/lib/resume/tracks";
 import type { Resume, ResumeLanguage, ResumeTrack } from "@/lib/schemas/resume";
 
 import { ChangeReview } from "./change-review";
+import { LlmProgress } from "./llm-progress";
 import { decideDraft, deleteResume, exportUrl, generateResume, reviseResume, updateResume } from "./resume-api";
 import { useResumeConsent } from "./resume-consent";
 import { ResumePreview } from "./resume-preview";
@@ -55,7 +57,7 @@ export function ResumeWorkspace({ id, track, targetRole, language, activeVersion
 
   const [instruction, setInstruction] = useState("");
   const [roleDraft, setRoleDraft] = useState<string | null>(null);
-  const [pending, setPending] = useState<"revise" | "activate" | "delete" | "role" | "rebuild" | null>(null);
+  const [pending, setPending] = useState<"revise" | "decide" | "activate" | "delete" | "role" | "rebuild" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
 
@@ -88,7 +90,7 @@ export function ResumeWorkspace({ id, track, targetRole, language, activeVersion
   }
 
   async function onDecide(acceptedChangeIds: string[]) {
-    await run("revise", async () => {
+    await run("decide", async () => {
       await decideDraft(id, draft?.version ?? 0, acceptedChangeIds);
       router.refresh();
     });
@@ -233,6 +235,7 @@ export function ResumeWorkspace({ id, track, targetRole, language, activeVersion
             Löschen
           </Button>
         </div>
+        {pending === "rebuild" ? <LlmProgress text="Wir erstellen den Lebenslauf mit deinem aktuellen Profil neu." /> : null}
       </div>
 
       <aside className="space-y-4 lg:sticky lg:top-4 lg:order-2">
@@ -247,13 +250,19 @@ export function ResumeWorkspace({ id, track, targetRole, language, activeVersion
                 <li key={gap}>{gap}</li>
               ))}
             </ul>
-            <p className="mt-2 text-xs opacity-80">Wir erfinden nichts dazu. Ergänze dein Profil, wenn du hier Erfahrung hast.</p>
+            <p className="mt-2 text-xs opacity-80">
+              Wir erfinden nichts dazu.{" "}
+              <Link href="/onboarding" className="font-medium underline underline-offset-2">
+                Ergänze dein Profil
+              </Link>
+              , wenn du hier Erfahrung hast, und erstelle den Lebenslauf danach neu.
+            </p>
           </section>
         ) : null}
 
         {draft ? <ChangeReview key={draft.version} changes={draft.changes} note={draft.note} onDecide={onDecide} /> : null}
 
-        <section aria-labelledby="chat-title" className="space-y-3 rounded-lg border p-4">
+        <section aria-labelledby="chat-title" className="space-y-3 rounded-lg border bg-card p-4">
           <h2 id="chat-title" className="font-semibold">
             Lebenslauf anpassen
           </h2>
@@ -325,6 +334,7 @@ export function ResumeWorkspace({ id, track, targetRole, language, activeVersion
               {pending === "revise" ? "Wird überarbeitet …" : "Änderung vorschlagen lassen"}
             </Button>
           </form>
+          {pending === "revise" ? <LlmProgress text="Wir überarbeiten deinen Lebenslauf nach deiner Anweisung." /> : null}
           {consentDialog}
         </section>
       </aside>

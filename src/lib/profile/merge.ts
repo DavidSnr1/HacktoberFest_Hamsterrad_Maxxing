@@ -25,6 +25,9 @@ export function emptyProfile(): CandidateProfile {
     education: [],
     skills: [],
     languages: [],
+    experience: [],
+    projects: [],
+    volunteering: [],
     goals: {
       tracks: null,
       employmentTypes: null,
@@ -126,6 +129,19 @@ export function mergeProfile(
     ),
     skills: mergeList(profile.skills, patch.skills, normalize, ctx),
     languages: mergeList(profile.languages, patch.languages, (l) => normalize(l.language), ctx),
+    experience: mergeList(
+      profile.experience,
+      patch.experience,
+      (e) => `${normalize(e.organization)}|${normalize(e.role)}|${e.start ?? ""}`,
+      ctx,
+    ),
+    projects: mergeList(profile.projects, patch.projects, (p) => normalize(p.name), ctx),
+    volunteering: mergeList(
+      profile.volunteering,
+      patch.volunteering,
+      (v) => `${normalize(v.organization)}|${normalize(v.role)}|${v.start ?? ""}`,
+      ctx,
+    ),
     goals: {
       tracks: mergeScalar(profile.goals.tracks, goals.tracks, ctx),
       employmentTypes: mergeScalar(profile.goals.employmentTypes, goals.employmentTypes, ctx),
@@ -170,6 +186,8 @@ export function profileCompleteness(profile: CandidateProfile): number {
     profile.education.length > 0,
     profile.skills.length > 0,
     profile.languages.length > 0,
+    // One check for the whole track record: not everyone has projects or volunteering.
+    profile.experience.length + profile.projects.length + profile.volunteering.length > 0,
     profile.goals.tracks !== null,
     profile.goals.employmentTypes !== null,
     profile.goals.preferredLocations !== null,

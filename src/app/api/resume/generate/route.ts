@@ -13,7 +13,8 @@ import {
 import { generateResumeInputSchema } from "@/lib/schemas/resume";
 import { getCurrentUser } from "@/lib/supabase/server";
 
-export const maxDuration = 60;
+// Gemma 4 31B needs one to two minutes here; llm.ts allows up to 280 s including fallback.
+export const maxDuration = 300;
 
 /** Creates the resume for a track, or rebuilds it from the current profile if it already exists. */
 export async function POST(request: Request) {

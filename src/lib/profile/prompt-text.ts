@@ -2,7 +2,10 @@ import type { CandidateProfile } from "@/lib/schemas/candidate-profile";
 import {
   EMPLOYMENT_TYPE_LABELS,
   formatEducation,
+  formatExperience,
   formatLanguage,
+  formatProject,
+  formatVolunteering,
   formatYearMonth,
   TRACK_LABELS,
 } from "./labels";
@@ -29,6 +32,15 @@ export function profileToPromptText(
   if (education.length) {
     lines.push("", "### Ausbildung", ...education.map((e) => `- ${formatEducation(e.value)}`));
   }
+
+  const stations = <T extends { details: string[] }>(title: string, entries: { value: T }[], format: (value: T) => string) => {
+    if (!entries.length) return;
+    lines.push("", `### ${title}`);
+    for (const { value } of entries) lines.push(`- ${format(value)}`, ...value.details.map((d) => `  - ${d}`));
+  };
+  stations("Praxiserfahrung", profile.experience.filter(include), formatExperience);
+  stations("Projekte", profile.projects.filter(include), formatProject);
+  stations("Ehrenamt", profile.volunteering.filter(include), formatVolunteering);
 
   const skills = profile.skills.filter(include);
   if (skills.length) lines.push("", "### Fähigkeiten", `- ${skills.map((s) => s.value).join(", ")}`);

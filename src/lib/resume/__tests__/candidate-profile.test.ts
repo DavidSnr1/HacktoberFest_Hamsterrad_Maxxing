@@ -71,11 +71,52 @@ describe("toResumeProfile", () => {
     assert.deepEqual(bachelor.details, []);
   });
 
-  it("has no experience or projects (not part of the format)", () => {
+  it("maps experience, projects and volunteering with their ids", () => {
     const profile = exampleProfile();
-    assert.equal(profile.experience.length, 0);
-    assert.equal(profile.projects.length, 0);
-    assert.equal(indexProfile(profile).size, 2 + 2 + 2);
+    const [internship, workingStudent] = profile.experience;
+    assert.equal(internship.id, "c3d2e1f0-7a6b-4c5d-8e9f-0a1b2c3d4e51");
+    assert.equal(internship.role, "Praktikant Strategy Consulting");
+    assert.equal(internship.employmentType, "internship");
+    assert.deepEqual([internship.start, internship.end], ["2026-03", "2026-08"]);
+    assert.equal(internship.details.length, 3);
+    // No end with a start means "ongoing".
+    assert.deepEqual([workingStudent.start, workingStudent.end], ["2025-10", null]);
+    assert.equal(profile.projects[0].context, "Universität Mannheim");
+    // Volunteering becomes the "other" kind, shown as "Engagement".
+    assert.equal(profile.other[0].title, "Vorstand Finanzen");
+    assert.equal(profile.other[0].organization, "Fachschaft VWL/BWL");
+    assert.equal(indexProfile(profile).size, 2 + 2 + 1 + 2 + 2 + 1);
+  });
+
+  it("drops unconfirmed stations and dates the resume can't show", () => {
+    const raw = structuredClone(example);
+    raw.experience[0].confirmed = false;
+    raw.projects[0].value.start = "Herbst 2025";
+    const profile = toResumeProfile(parseCandidateProfile(raw), ACCOUNT, NOW);
+    assert.equal(profile.experience.length, 1);
+    assert.deepEqual([profile.projects[0].start, profile.projects[0].end], [null, null]);
+  });
+});
+
+describe("resolving stations", () => {
+  it("shows organisation, employment type and volunteering per language", () => {
+    const profile = exampleProfile();
+    const [, workingStudent] = profile.experience;
+    const volunteering = profile.other[0];
+    const draft = {
+      summary: "",
+      sections: [
+        { id: "s-experience", kind: "experience" as const, title: "Praxiserfahrung", items: [{ id: "i-1", sourceRefs: [workingStudent.id], bullets: [] }] },
+        { id: "s-other", kind: "other" as const, title: "Engagement", items: [{ id: "i-2", sourceRefs: [volunteering.id], bullets: [] }] },
+      ],
+    };
+    const de = resolveResume(draft, profile, { language: "de", targetRole: "Werkstudent", gaps: [] });
+    assert.equal(de.sections[0].items[0].subheading, "SAP SE · Werkstudent");
+    assert.deepEqual(de.sections[0].items[0].period, { start: "2025-10", end: null });
+    assert.equal(de.sections[1].items[0].heading, "Vorstand Finanzen");
+    assert.equal(de.sections[1].items[0].subheading, "Fachschaft VWL/BWL");
+    const en = resolveResume(draft, profile, { language: "en", targetRole: "Working Student", gaps: [] });
+    assert.equal(en.sections[0].items[0].subheading, "SAP SE · Working Student");
   });
 });
 
@@ -113,9 +154,9 @@ describe("aliasProfile", () => {
     const profile = exampleProfile();
     const aliases = aliasProfile(profile);
     const ids = [...indexProfile(aliases.profile).keys()];
-    assert.deepEqual(ids, ["p1", "p2", "p3", "p4", "p5", "p6"]);
+    assert.deepEqual(ids, ["p1", "p2", "p3", "p4", "p5", "p6", "p7", "p8", "p9", "p10"]);
     assert.equal(aliases.fromAlias("p1"), profile.education[0].id);
-    assert.equal(aliases.toAlias(profile.skills[1].id), "p4");
+    assert.equal(aliases.toAlias(profile.skills[1].id), "p7");
     assert.equal(aliases.fromAlias("p99"), "p99");
   });
 

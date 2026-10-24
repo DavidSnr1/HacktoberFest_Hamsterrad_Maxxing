@@ -1,6 +1,7 @@
 "use client";
 
 import { CheckIcon, Loader2Icon, SparklesIcon } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
@@ -10,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { suggestTrack, TRACK_TEMPLATES } from "@/lib/resume/tracks";
 import { RESUME_TRACKS, type ResumeLanguage, type ResumeTrack } from "@/lib/schemas/resume";
 
+import { LlmProgress } from "./llm-progress";
 import { generateResume, updateResume } from "./resume-api";
 import { useResumeConsent } from "./resume-consent";
 
@@ -19,6 +21,8 @@ type Props = {
   existing: ExistingResumes;
   /** Result of `hasConsent("resume")` on the server. */
   consentGranted: boolean;
+  /** The profile has no experience, projects or volunteering yet. */
+  stationsMissing?: boolean;
   /** Pre-filled role, e.g. the job title handed over from the job search. */
   initialRole?: string;
   initialTrack?: ResumeTrack;
@@ -30,7 +34,7 @@ const LANGUAGE_LABELS: Record<ResumeLanguage, string> = { de: "Deutsch", en: "En
  * Role input + track choice. Creates the resume for the track, or – if it
  * already exists – takes the role over (same language) or rebuilds it (other language).
  */
-export function ResumeStartForm({ existing, consentGranted, initialRole = "", initialTrack }: Props) {
+export function ResumeStartForm({ existing, consentGranted, stationsMissing = false, initialRole = "", initialTrack }: Props) {
   const router = useRouter();
   const { requireConsent, consentDialog } = useResumeConsent(consentGranted);
   const [role, setRole] = useState(initialRole);
@@ -91,7 +95,16 @@ export function ResumeStartForm({ existing, consentGranted, initialRole = "", in
           : "Wähle einen Bereich";
 
   return (
-    <form id="start" onSubmit={submit} className="space-y-5 rounded-lg border p-4 sm:p-5">
+    <form id="start" onSubmit={submit} className="space-y-5 rounded-lg border bg-card p-4 sm:p-5">
+      {stationsMissing ? (
+        <p className="rounded-md bg-muted px-3 py-2 text-sm">
+          In deinem Profil fehlen noch Praxiserfahrung, Projekte und Ehrenamt. Ohne sie besteht dein Lebenslauf nur aus Ausbildung,
+          Kenntnissen und Sprachen.{" "}
+          <Link href="/onboarding" className="font-medium text-primary hover:underline">
+            Jetzt ergänzen
+          </Link>
+        </p>
+      ) : null}
       <div className="space-y-2">
         <label htmlFor="target-role" className="text-sm font-medium">
           Auf welche Rolle bewirbst du dich?
@@ -181,9 +194,7 @@ export function ResumeStartForm({ existing, consentGranted, initialRole = "", in
       </Button>
       {consentDialog}
       {pending && action !== "role" ? (
-        <p className="text-sm text-muted-foreground" aria-live="polite">
-          Wir wählen die passenden Einträge aus deinem Profil aus und formulieren sie für {label}. Das dauert meist 20–40 Sekunden.
-        </p>
+        <LlmProgress text={`Wir wählen die passenden Einträge aus deinem Profil aus und formulieren sie für ${label}.`} />
       ) : null}
     </form>
   );

@@ -9,7 +9,8 @@ import { activeVersionOf, createDraftVersion, getResumeDocument } from "@/lib/re
 import { reviseResumeInputSchema } from "@/lib/schemas/resume";
 import { getCurrentUser } from "@/lib/supabase/server";
 
-export const maxDuration = 60;
+// Gemma 4 31B needs one to two minutes here; llm.ts allows up to 280 s including fallback.
+export const maxDuration = 300;
 
 export async function POST(request: Request, ctx: RouteContext<"/api/resume/[id]/revise">) {
   const user = await getCurrentUser();

@@ -19,6 +19,13 @@ const sourced = <T extends z.ZodType>(value: T) =>
     updatedAt: z.string(),
   });
 
+/** Period and details shared by experience, projects and volunteering. */
+const stationFields = {
+  start: z.string().nullish(),
+  end: z.string().nullish(),
+  details: z.array(z.string()).default([]),
+};
+
 export const DEGREES = ["bachelor", "master", "diplom", "staatsexamen", "phd", "other"] as const;
 export const LANGUAGE_LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2", "native"] as const;
 
@@ -45,6 +52,25 @@ export const candidateProfileFormatSchema = z.object({
     .default([]),
   skills: z.array(sourced(z.string().min(1))).default([]),
   languages: z.array(sourced(z.object({ language: z.string().min(1), level: z.enum(LANGUAGE_LEVELS) }))).default([]),
+  experience: z
+    .array(
+      sourced(
+        z.object({
+          organization: z.string().min(1),
+          role: z.string().min(1),
+          type: z.string().nullish(),
+          location: z.string().nullish(),
+          ...stationFields,
+        }),
+      ),
+    )
+    .default([]),
+  projects: z
+    .array(sourced(z.object({ name: z.string().min(1), context: z.string().nullish(), ...stationFields })))
+    .default([]),
+  volunteering: z
+    .array(sourced(z.object({ organization: z.string().min(1), role: z.string().min(1), ...stationFields })))
+    .default([]),
   // Job preferences – not resume content, kept loose on purpose.
   goals: z.unknown().optional(),
 });
@@ -66,6 +92,15 @@ export type AccountInfo = { name: string | null; email: string | null };
 function currentMonth(now: Date): string {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 }
+
+/** Dates the resume can't show (wrong format) are dropped; a missing end with a start means "ongoing". */
+function period(value: { start?: string | null; end?: string | null }) {
+  const valid = (date: string | null | undefined) => (date && partialDateSchema.safeParse(date).success ? date : null);
+  const start = valid(value.start);
+  return { start, end: start ? valid(value.end) : null };
+}
+
+const cleanDetails = (details: string[]) => details.map((d) => d.trim()).filter(Boolean);
 
 export class ProfileFormatError extends Error {}
 
@@ -121,13 +156,35 @@ export function toResumeProfile(profile: CandidateProfileFormat, account: Accoun
         links: [],
       },
       education,
-      experience: [],
-      projects: [],
+      experience: profile.experience.filter(usable).map((entry) => ({
+        id: entry.id,
+        organization: entry.value.organization.trim(),
+        role: entry.value.role.trim(),
+        // Code ("internship" …); `resolveResume` shows it in the resume's language.
+        employmentType: entry.value.type ?? null,
+        location: entry.value.location?.trim() || null,
+        ...period(entry.value),
+        details: cleanDetails(entry.value.details),
+      })),
+      projects: profile.projects.filter(usable).map((entry) => ({
+        id: entry.id,
+        name: entry.value.name.trim(),
+        context: entry.value.context?.trim() || null,
+        ...period(entry.value),
+        details: cleanDetails(entry.value.details),
+      })),
       skills: profile.skills.filter(usable).map((entry) => ({ id: entry.id, name: entry.value.trim(), category: null, level: null })),
       languages: profile.languages
         .filter(usable)
         .map((entry) => ({ id: entry.id, name: entry.value.language.trim(), level: entry.value.level })),
-      other: [],
+      // Volunteering is the "other" kind; the tracks show it as "Engagement".
+      other: profile.volunteering.filter(usable).map((entry) => ({
+        id: entry.id,
+        title: entry.value.role.trim(),
+        organization: entry.value.organization.trim(),
+        ...period(entry.value),
+        details: cleanDetails(entry.value.details),
+      })),
     }),
   );
 }

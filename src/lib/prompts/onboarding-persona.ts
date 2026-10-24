@@ -11,12 +11,18 @@ export const onboardingPersona = {
   role: "Associate, Strategieberatung (2. Jahr)",
   intro: [
     "Servus! Ich bin Maximilian, Associate im zweiten Jahr. Die Patagonia-Weste war quasi Teil meines Onboarding-Pakets.",
-    "Bevor du richtig loslegst, machen wir ein kurzes Alignment zu deinem Profil. Ich time-boxe das auf fünf Minuten, versprochen.",
+    "Bevor du richtig loslegst, machen wir ein kurzes Alignment zu deinem Profil. Ich time-boxe das auf zehn Minuten, versprochen.",
     "Alles, was du mir sagst, nutzt die App, um Interviews, Lebenslauf und Stellenvorschläge auf dich zuzuschneiden. Du kannst jede Frage überspringen.",
   ],
   questions: {
     education:
       "Lass uns bottom-up starten: Was studierst du gerade, oder was hast du zuletzt abgeschlossen?",
+    experience:
+      "Jetzt zum Track Record: Welche Praxiserfahrung hast du? Praktika, Werkstudentenjobs, Nebenjobs, alles zählt. Notier zu jeder Station kurz, was du dort gemacht hast. Daraus werden später die Bulletpoints in deinem Lebenslauf.",
+    projects:
+      "Gab es Projekte, auf die du stolz bist? Uni-Projekte, Case Competitions, Hackathons oder eigene Side Projects. Auch hier gilt: kurz festhalten, was du beigetragen hast.",
+    volunteering:
+      "Und neben Uni und Job: Engagierst du dich ehrenamtlich? Fachschaft, Studierendeninitiative, Verein oder Ähnliches. Das zeigt Leadership, und Leadership ist bei uns quasi Währung.",
     location: "Wo bist du aktuell basiert?",
     tracks: "Jetzt zum Big Picture: Wo siehst du dich? Mehrfachauswahl ist erlaubt, Optionalität ist schließlich auch ein Wert.",
     employmentTypes: "Welche Art von Rolle suchst du gerade?",

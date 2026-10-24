@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
-import { candidateProfileSchema } from "@/lib/schemas/candidate-profile";
+import { candidateProfileSchema, volunteeringValueSchema } from "@/lib/schemas/candidate-profile";
 import { applyConfirmation, emptyProfile, mergeProfile, profileCompleteness } from "./merge";
 
 let counter = 0;
@@ -85,6 +85,17 @@ test("merged profiles stay valid against the schema", () => {
       education: [{ institution: "Uni Mannheim", degree: "master", field: "BWL", semester: 2, expectedGraduation: "2027-09" }],
       skills: ["Excel"],
       languages: [{ language: "Deutsch", level: "native" }],
+      experience: [
+        {
+          organization: "SAP SE",
+          role: "Werkstudent Controlling",
+          type: "working_student",
+          location: null,
+          start: "2025-10",
+          end: null,
+          details: ["Kostenreporting automatisiert"],
+        },
+      ],
       goals: { tracks: ["consulting"], employmentTypes: ["internship"], preferredLocations: ["München"], remoteOk: true, earliestStart: "2027-03" },
     },
     { source: "user", now },
@@ -98,4 +109,29 @@ test("the example file for the team matches the schema", () => {
   const example = JSON.parse(readFileSync("docs/candidate-profile.example.json", "utf8"));
   const result = candidateProfileSchema.safeParse(example);
   assert.ok(result.success, result.success ? "" : JSON.stringify(result.error.issues.slice(0, 3)));
+});
+
+test("profiles stored before experience, projects and volunteering existed stay valid", () => {
+  const { experience, projects, volunteering, ...older } = emptyProfile();
+  assert.deepEqual([experience, projects, volunteering], [[], [], []]);
+  const parsed = candidateProfileSchema.parse(older);
+  assert.deepEqual(parsed.experience, []);
+  assert.deepEqual(parsed.volunteering, []);
+});
+
+test("a station keeps its id when only its details change", () => {
+  const station = { organization: "SAP SE", role: "Werkstudent", type: null, location: null, start: "2025-10", end: null };
+  let p = mergeProfile(emptyProfile(), { experience: [{ ...station, details: ["Reporting"] }] }, { source: "user", now, newId });
+  const id = p.experience[0].id;
+  p = mergeProfile(p, { experience: [{ ...station, details: ["Reporting", "Forecasts"] }] }, { source: "user", now, newId });
+  assert.equal(p.experience.length, 1);
+  assert.equal(p.experience[0].id, id);
+  assert.deepEqual(p.experience[0].value.details, ["Reporting", "Forecasts"]);
+});
+
+test("a station's end must not lie before its start or exist without one", () => {
+  const base = { organization: "Fachschaft", role: "Vorstand", details: [] };
+  assert.ok(volunteeringValueSchema.safeParse({ ...base, start: "2025-04", end: null }).success);
+  assert.ok(!volunteeringValueSchema.safeParse({ ...base, start: "2025-04", end: "2025-01" }).success);
+  assert.ok(!volunteeringValueSchema.safeParse({ ...base, start: null, end: "2025-01" }).success);
 });

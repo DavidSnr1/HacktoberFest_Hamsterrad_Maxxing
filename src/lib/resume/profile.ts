@@ -100,7 +100,7 @@ export function entryText({ kind, entry }: ProfileEntry): string {
     case "languages":
       return [entry.name, entry.level].filter(Boolean).join("\n");
     case "other":
-      return [entry.title, entry.start, entry.end, ...entry.details].filter(Boolean).join("\n");
+      return [entry.title, entry.organization, entry.start, entry.end, ...entry.details].filter(Boolean).join("\n");
   }
 }
 

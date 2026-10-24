@@ -18,6 +18,12 @@ const DEGREE_LABELS: Record<ResumeLanguage, Record<string, string | null>> = {
   en: { bachelor: "Bachelor", master: "Master", diplom: "Diplom", staatsexamen: "State Examination", phd: "PhD", other: null },
 };
 
+/** Employment type codes from onboarding; unknown values are shown as entered, null hides the type. */
+const EMPLOYMENT_TYPE_LABELS: Record<ResumeLanguage, Record<string, string | null>> = {
+  de: { internship: "Praktikum", working_student: "Werkstudent", full_time: "Vollzeit", part_time: "Teilzeit", other: null },
+  en: { internship: "Internship", working_student: "Working Student", full_time: "Full-time", part_time: "Part-time", other: null },
+};
+
 const LEVEL_LABELS: Record<ResumeLanguage, Record<string, string>> = {
   de: { native: "Muttersprache" },
   en: { native: "Native" },
@@ -31,6 +37,12 @@ function degreeHeading(degree: string, field: string | null, language: ResumeLan
   if (!label) return field ?? degree;
   if (!field) return label;
   return language === "de" ? `${label} ${field}` : `${label} in ${field}`;
+}
+
+function employmentTypeLabel(type: string | null, language: ResumeLanguage): string | null {
+  if (!type) return null;
+  const labels = EMPLOYMENT_TYPE_LABELS[language];
+  return Object.hasOwn(labels, type) ? labels[type] : type;
 }
 
 function levelLabel(level: string, language: ResumeLanguage): string {
@@ -48,7 +60,7 @@ function resolveFacts(
       const e = source.entry;
       return {
         heading: e.role,
-        subheading: joinParts([e.organization, e.employmentType]),
+        subheading: joinParts([e.organization, employmentTypeLabel(e.employmentType, language)]),
         period: { start: e.start, end: e.end },
         location: e.location,
       };
@@ -69,7 +81,7 @@ function resolveFacts(
     }
     case "other": {
       const e = source.entry;
-      return { heading: e.title, subheading: null, period: { start: e.start, end: e.end }, location: null };
+      return { heading: e.title, subheading: e.organization, period: { start: e.start, end: e.end }, location: null };
     }
     case "skills":
       return { heading: source.entry.name, subheading: source.entry.level, period: null, location: null };

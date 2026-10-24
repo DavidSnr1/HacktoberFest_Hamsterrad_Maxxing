@@ -77,6 +77,8 @@ export const profileLanguageSchema = z.object({
 export const profileOtherSchema = z.object({
   id: idField,
   title: z.string().min(1).max(200),
+  /** E.g. the club or initiative of a volunteering role. */
+  organization: z.string().max(200).nullable().default(null),
   ...periodFields,
   details: z.array(z.string().max(1000)).max(30).default([]),
 });

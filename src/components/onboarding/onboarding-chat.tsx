@@ -159,7 +159,7 @@ export function OnboardingChat({ prefill }: { prefill: Partial<Record<Onboarding
             <li key={message.id} className={cn("flex", message.from === "user" ? "justify-end" : "justify-start")}>
               <p
                 className={cn(
-                  "max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed",
+                  "max-w-[85%] rounded-lg px-3.5 py-2.5 text-sm leading-relaxed",
                   message.from === "bot" && "rounded-tl-sm bg-muted",
                   message.from === "user" && !message.muted && "rounded-tr-sm bg-primary text-primary-foreground",
                   message.muted && "rounded-tr-sm border border-dashed text-muted-foreground italic",
@@ -171,7 +171,7 @@ export function OnboardingChat({ prefill }: { prefill: Partial<Record<Onboarding
           ))}
           {phase.kind === "typing" && (
             <li className="flex" aria-label={`${persona.name} schreibt`}>
-              <span className="flex gap-1 rounded-2xl rounded-tl-sm bg-muted px-3.5 py-3.5">
+              <span className="flex gap-1 rounded-lg rounded-tl-sm bg-muted px-3.5 py-3.5">
                 {[0, 150, 300].map((delay) => (
                   <span
                     key={delay}

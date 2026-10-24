@@ -1,13 +1,23 @@
 import { z } from "zod";
-import { DEGREE_LABELS, EMPLOYMENT_TYPE_LABELS, LANGUAGE_LEVEL_LABELS, TRACK_LABELS } from "@/lib/profile/labels";
+import {
+  DEGREE_LABELS,
+  EMPLOYMENT_TYPE_LABELS,
+  EXPERIENCE_TYPE_LABELS,
+  LANGUAGE_LEVEL_LABELS,
+  TRACK_LABELS,
+} from "@/lib/profile/labels";
 import {
   degreeValues,
   educationValueSchema,
   employmentTypeValues,
+  experienceTypeValues,
+  experienceValueSchema,
   languageLevelValues,
   languageValueSchema,
+  projectValueSchema,
   skillValueSchema,
   trackValues,
+  volunteeringValueSchema,
   yearMonthSchema,
   type CandidateProfile,
   type CandidateProfilePatch,
@@ -21,8 +31,12 @@ import {
 
 type Option = { value: string; label: string };
 
+/** Lists of stations (with period and details) that end up in the resume. */
+export type StationKind = "experience" | "projects" | "volunteering";
+
 export type StepInput =
   | { kind: "education" }
+  | { kind: "stations"; station: StationKind }
   | { kind: "text"; placeholder: string }
   | { kind: "single"; options: Option[] }
   | { kind: "multi"; options: Option[] }
@@ -32,6 +46,12 @@ export type StepInput =
 
 const options = <T extends string>(labels: Record<T, string>, values: readonly T[]): Option[] =>
   values.map((value) => ({ value, label: labels[value] }));
+
+/** The user's own entries of a list, or undefined if there are none. */
+const ownValues = <T>(items: { value: T; source: string }[]) => {
+  const values = items.filter((item) => item.source === "user").map((item) => item.value);
+  return values.length ? values : undefined;
+};
 
 const tagList = (max: number) =>
   z.array(z.string().trim().min(1).max(100)).min(1).max(max).transform((items) => [...new Set(items)]);
@@ -54,6 +74,28 @@ export const ONBOARDING_STEPS = [
     schema: educationValueSchema,
     toPatch: (education) => ({ education: [education] }),
     fromProfile: (p) => p.education.find((e) => e.source === "user")?.value,
+  }),
+  // An empty list is allowed: it removes earlier entries when the chat is repeated.
+  defineStep({
+    id: "experience",
+    input: { kind: "stations", station: "experience" },
+    schema: z.array(experienceValueSchema).max(30),
+    toPatch: (experience) => ({ experience }),
+    fromProfile: (p) => ownValues(p.experience),
+  }),
+  defineStep({
+    id: "projects",
+    input: { kind: "stations", station: "projects" },
+    schema: z.array(projectValueSchema).max(30),
+    toPatch: (projects) => ({ projects }),
+    fromProfile: (p) => ownValues(p.projects),
+  }),
+  defineStep({
+    id: "volunteering",
+    input: { kind: "stations", station: "volunteering" },
+    schema: z.array(volunteeringValueSchema).max(30),
+    toPatch: (volunteering) => ({ volunteering }),
+    fromProfile: (p) => ownValues(p.volunteering),
   }),
   defineStep({
     id: "location",
@@ -143,6 +185,7 @@ export const onboardingStepIdSchema = z.enum(
 
 export const DEGREE_OPTIONS = options(DEGREE_LABELS, degreeValues);
 export const LANGUAGE_LEVEL_OPTIONS = options(LANGUAGE_LEVEL_LABELS, languageLevelValues);
+export const EXPERIENCE_TYPE_OPTIONS = options(EXPERIENCE_TYPE_LABELS, experienceTypeValues);
 
 /** Prefill values for every step from the user's own (source "user") entries. */
 export function getStepPrefill(profile: CandidateProfile): Partial<Record<OnboardingStepId, unknown>> {

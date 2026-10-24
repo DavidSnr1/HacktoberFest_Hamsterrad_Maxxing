@@ -3,19 +3,23 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { DownloadIcon, MessageCircleIcon } from "lucide-react";
 import { PersonaAvatar } from "@/components/onboarding/persona-avatar";
+import { PageHeader } from "@/components/page-header";
 import { DisplayNameForm } from "@/components/profile/display-name-form";
 import { SuggestionActions } from "@/components/profile/suggestion-actions";
 import { buttonVariants } from "@/components/ui/button";
 import {
   EMPLOYMENT_TYPE_LABELS,
   formatEducation,
+  formatExperience,
   formatLanguage,
+  formatProject,
+  formatVolunteering,
   formatYearMonth,
   TRACK_LABELS,
 } from "@/lib/profile/labels";
 import { profileCompleteness } from "@/lib/profile/merge";
 import { getCandidateProfileRecord, getDisplayName } from "@/lib/profile/server";
-import type { ProfileSource, ProfileTarget } from "@/lib/schemas/candidate-profile";
+import type { ListField, ProfileSource, ProfileTarget } from "@/lib/schemas/candidate-profile";
 
 export const metadata: Metadata = { title: "Mein Profil" };
 
@@ -28,15 +32,13 @@ const SOURCE_LABELS: Record<ProfileSource, string> = {
 
 export default function ProfilePage() {
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
-      <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Mein Profil</h1>
-        <p className="text-muted-foreground">
-          Die Grundlage für Interviews, Lebenslauf und Stellenvorschläge. Automatisch erkannte Angaben
-          nutzt die App erst, wenn du sie übernimmst.
-        </p>
-      </header>
-      <Suspense fallback={<div className="h-64 animate-pulse rounded-xl bg-muted" />}>
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-8">
+      <PageHeader
+        eyebrow="Stammdaten"
+        title="Mein Profil"
+        description="Die Grundlage für Interviews, Lebenslauf und Stellenvorschläge. Automatisch erkannte Angaben nutzt die App erst, wenn du sie übernimmst."
+      />
+      <Suspense fallback={<div className="h-64 animate-pulse rounded-lg bg-muted" />}>
         <ProfileContent />
       </Suspense>
     </div>
@@ -47,10 +49,33 @@ type Row = {
   key: string;
   label: string;
   text: string | null;
+  /** Points under the entry (what the person did at a station). */
+  details?: string[];
   source?: ProfileSource;
   confirmed?: boolean;
   target?: ProfileTarget;
 };
+
+type ListItem<T> = { id: string; value: T; source: ProfileSource; confirmed: boolean };
+
+function listRows<T>(
+  list: ListField,
+  items: ListItem<T>[],
+  format: (value: T) => string,
+  details?: (value: T) => string[],
+): Row[] {
+  return items.map((item) => ({
+    key: item.id,
+    label: "",
+    text: format(item.value),
+    details: details?.(item.value),
+    source: item.source,
+    confirmed: item.confirmed,
+    target: { list, id: item.id },
+  }));
+}
+
+const stationDetails = (value: { details: string[] }) => value.details;
 
 async function ProfileContent() {
   const [record, displayName] = await Promise.all([getCandidateProfileRecord(), getDisplayName()]);
@@ -81,17 +106,10 @@ async function ProfileContent() {
   });
 
   const sections: { title: string; rows: Row[] }[] = [
-    {
-      title: "Ausbildung",
-      rows: profile.education.map((e) => ({
-        key: e.id,
-        label: "",
-        text: formatEducation(e.value),
-        source: e.source,
-        confirmed: e.confirmed,
-        target: { list: "education", id: e.id },
-      })),
-    },
+    { title: "Ausbildung", rows: listRows("education", profile.education, formatEducation) },
+    { title: "Praxiserfahrung", rows: listRows("experience", profile.experience, formatExperience, stationDetails) },
+    { title: "Projekte", rows: listRows("projects", profile.projects, formatProject, stationDetails) },
+    { title: "Ehrenamt", rows: listRows("volunteering", profile.volunteering, formatVolunteering, stationDetails) },
     {
       title: "Ziele",
       rows: [
@@ -103,39 +121,21 @@ async function ProfileContent() {
         scalar("location", "Wohnort", profile.basics.location, (v) => v, { section: "basics", field: "location" }),
       ],
     },
-    {
-      title: "Fähigkeiten",
-      rows: profile.skills.map((s) => ({
-        key: s.id,
-        label: "",
-        text: s.value,
-        source: s.source,
-        confirmed: s.confirmed,
-        target: { list: "skills", id: s.id },
-      })),
-    },
-    {
-      title: "Sprachen",
-      rows: profile.languages.map((l) => ({
-        key: l.id,
-        label: "",
-        text: formatLanguage(l.value),
-        source: l.source,
-        confirmed: l.confirmed,
-        target: { list: "languages", id: l.id },
-      })),
-    },
+    { title: "Fähigkeiten", rows: listRows("skills", profile.skills, (skill) => skill) },
+    { title: "Sprachen", rows: listRows("languages", profile.languages, formatLanguage) },
   ];
 
   return (
     <>
-      <section className="flex flex-col gap-4 rounded-2xl border p-5 sm:flex-row sm:items-center">
+      <section className="flex flex-col gap-4 rounded-lg border bg-card p-5 sm:flex-row sm:items-center">
         <PersonaAvatar className="size-14 shrink-0 rounded-full" />
         <div className="flex flex-1 flex-col gap-2">
-          <p className="text-sm">
-            Dein Profil ist zu <strong>{completeness} %</strong> ausgefüllt.
+          <p className="text-sm text-muted-foreground">
+            Dein Profil ist zu{" "}
+            <strong className="font-heading text-2xl font-semibold text-foreground tabular-nums">{completeness} %</strong>{" "}
+            ausgefüllt.
           </p>
-          <div className="h-2 overflow-hidden rounded-full bg-muted" aria-hidden>
+          <div className="h-1.5 overflow-hidden bg-muted" aria-hidden>
             <div className="h-full bg-primary" style={{ width: `${completeness}%` }} />
           </div>
         </div>
@@ -152,25 +152,39 @@ async function ProfileContent() {
       </section>
 
       <section className="flex flex-col gap-2">
-        <h2 className="text-lg font-semibold tracking-tight">Name</h2>
+        <h2 className="text-xl font-semibold tracking-tight">Name</h2>
         <p className="text-sm text-muted-foreground">Steht oben in deinen Lebensläufen und im Export.</p>
         <DisplayNameForm key={displayName ?? ""} initialName={displayName} />
       </section>
 
       {sections.map((section) => (
         <section key={section.title} className="flex flex-col gap-2">
-          <h2 className="text-lg font-semibold tracking-tight">{section.title}</h2>
+          <h2 className="text-xl font-semibold tracking-tight">{section.title}</h2>
           {section.rows.length === 0 ? (
-            <p className="rounded-xl border border-dashed px-4 py-3 text-sm text-muted-foreground">Noch keine Angaben.</p>
+            <p className="rounded-lg border border-dashed px-4 py-3 text-sm text-muted-foreground">Noch keine Angaben.</p>
           ) : (
-            <ul className="divide-y rounded-xl border">
+            <ul className="divide-y overflow-hidden rounded-lg border bg-card">
               {section.rows.map((row) => (
-                <li key={row.key} className="flex items-center gap-3 px-4 py-3">
+                <li
+                  key={row.key}
+                  className={row.confirmed === false ? "flex items-center gap-3 bg-secondary/60 px-4 py-3" : "flex items-center gap-3 px-4 py-3"}
+                >
                   <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                    {row.label && <span className="text-xs text-muted-foreground">{row.label}</span>}
+                    {row.label && (
+                      <span className="text-[0.7rem] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                        {row.label}
+                      </span>
+                    )}
                     <span className={row.text ? "text-sm" : "text-sm text-muted-foreground"}>
                       {row.text ?? "Keine Angabe"}
                     </span>
+                    {row.details && row.details.length > 0 && (
+                      <ul className="list-disc pl-4 text-sm text-muted-foreground marker:text-gold">
+                        {row.details.map((detail, i) => (
+                          <li key={i}>{detail}</li>
+                        ))}
+                      </ul>
+                    )}
                     {row.source && (
                       <span className="text-xs text-muted-foreground">
                         {SOURCE_LABELS[row.source]}

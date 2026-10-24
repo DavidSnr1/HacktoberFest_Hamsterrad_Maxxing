@@ -10,6 +10,7 @@ export const RESUME_RULES = `Grundregeln (immer einhalten):
 - Abschnitte gibst du nur über "kind" an. Titel und Reihenfolge der Abschnitte sind fest vorgegeben.
 - Zahlen dürfen nur vorkommen, wenn sie genau so in den referenzierten Profil-Einträgen stehen.
 - Bulletpoints: aktiv formuliert, konkret, max. 2 Zeilen. Umformulieren, kürzen und gewichten ist erlaubt, Inhalte hinzufügen nicht.
+- Bulletpoints einer Station (Erfahrung, Projekt, Engagement) entstehen nur aus deren "details". Hat sie keine details, bekommt sie keine Bulletpoints.
 - Abschnitte vom Typ "skills" und "languages" enthalten pro Profil-Eintrag ein Item ohne Bulletpoints, sortiert nach Relevanz für den Bereich.
 - Jeden Profil-Eintrag höchstens einmal verwenden. Für den Bereich irrelevante Einträge weglassen ist erlaubt.
 - Eintrags-IDs: kurze, eindeutige Kürzel (z. B. "i-1").
