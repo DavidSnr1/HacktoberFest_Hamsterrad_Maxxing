@@ -10,11 +10,13 @@ export function formatClock(totalSeconds: number) {
 type TranscriptListProps = {
   entries: TranscriptEntry[];
   interviewerName: string;
+  /** Hide timestamps, e.g. in the one-way format where they carry no meaning live. */
+  hideTimes?: boolean;
   className?: string;
 };
 
 /** Chat-style transcript, used live in the room and on the result page. */
-export function TranscriptList({ entries, interviewerName, className }: TranscriptListProps) {
+export function TranscriptList({ entries, interviewerName, hideTimes, className }: TranscriptListProps) {
   return (
     <ol className={cn("flex flex-col gap-3", className)}>
       {entries.map((entry, index) => {
@@ -25,7 +27,8 @@ export function TranscriptList({ entries, interviewerName, className }: Transcri
             className={cn("flex flex-col gap-1", isCandidate ? "items-end" : "items-start")}
           >
             <span className="text-xs text-muted-foreground">
-              {isCandidate ? "Du" : interviewerName} · {formatClock(entry.at)}
+              {isCandidate ? "Du" : interviewerName}
+              {!hideTimes && ` · ${formatClock(entry.at)}`}
             </span>
             <p
               className={cn(

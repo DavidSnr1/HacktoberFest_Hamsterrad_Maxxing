@@ -3,7 +3,7 @@ import { z } from "zod";
 import { apiError, apiOk, readJson } from "@/lib/api";
 import { awardXp, XP_REWARDS } from "@/lib/gamification/xp";
 import { generateAndStoreFeedback } from "@/lib/interview/feedback";
-import { finishInterviewSchema } from "@/lib/schemas/interview";
+import { finishInterviewSchema, transcriptSchema } from "@/lib/schemas/interview";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
 
 // Feedback is generated after the response (see `after` below). The quality
@@ -13,9 +13,9 @@ export const maxDuration = 300;
 export type FinishInterviewResponse = { status: "finished" | "aborted" };
 
 /**
- * Saves the transcript and closes a running interview. Feedback is created
- * in the background; the feedback page shows a pending state meanwhile.
- * An interview without a single candidate answer is stored as aborted.
+ * Closes a running interview. The answers are already stored by the answers
+ * route; an interview without any answer is stored as aborted. Feedback is
+ * created in the background while the feedback page shows a pending state.
  */
 export async function POST(request: Request, ctx: RouteContext<"/api/interviews/[id]/finish">) {
   const user = await getCurrentUser();
@@ -26,29 +26,35 @@ export async function POST(request: Request, ctx: RouteContext<"/api/interviews/
   if (!id.success) return apiError(400, "Ungültige Anfrage.");
 
   const parsed = finishInterviewSchema.safeParse(await readJson(request));
-  if (!parsed.success) return apiError(400, "Das Transkript konnte nicht gelesen werden.");
+  if (!parsed.success) return apiError(400, "Ungültige Anfrage.");
 
-  const { transcript, durationSeconds } = parsed.data;
-  const hasAnswers = transcript.some((entry) => entry.role === "candidate");
+  // RLS limits this to the user's own interviews.
+  const { data: current } = await supabase
+    .from("interviews")
+    .select("status, started_at, transcript")
+    .eq("id", id.data)
+    .maybeSingle();
+  if (!current) return apiError(404, "Interview nicht gefunden.");
+  if (current.status !== "running") return apiError(409, "Dieses Interview ist bereits beendet.");
+
+  const transcript = transcriptSchema.safeParse(current.transcript);
+  const hasAnswers = transcript.success && transcript.data.some((e) => e.role === "candidate");
   const status = parsed.data.status === "finished" && hasAnswers ? "finished" : "aborted";
+  const finishedAt = new Date();
+  const durationSeconds = Math.max(
+    0,
+    Math.round((finishedAt.getTime() - new Date(current.started_at).getTime()) / 1000),
+  );
 
-  // Only running interviews can be closed; RLS limits this to the user's own.
   const { data: interview, error } = await supabase
     .from("interviews")
-    .update({
-      status,
-      transcript,
-      duration_seconds: durationSeconds,
-      finished_at: new Date().toISOString(),
-    })
+    .update({ status, duration_seconds: durationSeconds, finished_at: finishedAt.toISOString() })
     .eq("id", id.data)
     .eq("status", "running")
     .select("id, user_id, track, transcript, duration_seconds")
     .maybeSingle();
 
-  if (error) {
-    return apiError(500, "Das Transkript konnte nicht gespeichert werden. Bitte versuche es erneut.");
-  }
+  if (error) return apiError(500, "Das Interview konnte nicht abgeschlossen werden. Bitte versuche es erneut.");
   if (!interview) return apiError(409, "Dieses Interview ist bereits beendet.");
 
   if (status === "finished") {

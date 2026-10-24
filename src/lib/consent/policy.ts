@@ -6,7 +6,7 @@ export type ConsentType = Enums<"consent_type">;
  * Bump this when a consent text changes materially. Users who agreed to an
  * older version are asked again before their next recording or upload.
  */
-export const CONSENT_POLICY_VERSION = "2026-10-24";
+export const CONSENT_POLICY_VERSION = "2026-10-24.2";
 
 type ConsentText = {
   title: string;
@@ -21,11 +21,12 @@ export const CONSENT_TEXTS: Record<ConsentType, ConsentText> = {
   voice: {
     title: "Einwilligung zur Sprachaufnahme",
     intro:
-      "Für Mock-Interviews und das Einsprechen deiner Erfahrungen nutzen wir dein Mikrofon. Deine Stimme ist ein personenbezogenes Datum, deshalb brauchen wir deine Zustimmung.",
+      "Für Mock-Interviews und das Einsprechen deiner Erfahrungen nehmen wir deine Antworten über das Mikrofon auf. Deine Stimme ist ein personenbezogenes Datum, deshalb brauchen wir deine Zustimmung.",
     points: [
-      "Deine Sprache wird live an unseren Sprachdienst ElevenLabs übertragen, damit der Interviewer antworten und deine Aussagen in Text umgewandelt werden können.",
-      "Wir speichern keine Audioaufnahmen dauerhaft, sondern nur das Transkript.",
+      "Jede aufgenommene Antwort wird an unseren Sprachdienst ElevenLabs übertragen und dort in Text umgewandelt.",
+      "Wir speichern keine Audioaufnahmen, sondern nur den erkannten Text (Transkript).",
       "Das Transkript wird zur Auswertung an Google (Gemini API) übermittelt. Daraus entsteht dein Feedback.",
+      "Die Kamera dient nur als Eigenansicht. Das Bild bleibt in deinem Browser und wird weder übertragen noch gespeichert.",
       "Du kannst deine Einwilligung jederzeit widerrufen und deine Daten löschen.",
     ],
     checkboxLabel:

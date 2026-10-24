@@ -1,6 +1,6 @@
 /** Browser media helpers with German error messages for the interview room. */
 
-export type MediaCheckResult = { ok: true } | { ok: false; message: string };
+type MediaResult = { ok: true; stream: MediaStream } | { ok: false; message: string };
 
 function messageForError(error: unknown, device: "mic" | "camera"): string {
   const name = error instanceof DOMException ? error.name : "";
@@ -24,25 +24,27 @@ function mediaSupported() {
   return typeof navigator !== "undefined" && Boolean(navigator.mediaDevices?.getUserMedia);
 }
 
-/** Asks for microphone permission and releases the device right away. */
-export async function checkMicrophone(): Promise<MediaCheckResult> {
-  if (!mediaSupported()) {
+/** Opens the microphone for the whole interview (level meter and recordings). */
+export async function openMicrophone(): Promise<MediaResult> {
+  if (!mediaSupported() || typeof MediaRecorder === "undefined") {
     return {
       ok: false,
-      message: "Dein Browser unterstützt keine Mikrofonaufnahme. Nutze einen aktuellen Browser über eine sichere Verbindung (HTTPS).",
+      message:
+        "Dein Browser unterstützt keine Audioaufnahme. Nutze einen aktuellen Browser über eine sichere Verbindung (HTTPS).",
     };
   }
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    stream.getTracks().forEach((track) => track.stop());
-    return { ok: true };
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+    });
+    return { ok: true, stream };
   } catch (error) {
     return { ok: false, message: messageForError(error, "mic") };
   }
 }
 
 /** Opens the front camera for the local self view. The video never leaves the browser. */
-export async function openCamera(): Promise<{ ok: true; stream: MediaStream } | { ok: false; message: string }> {
+export async function openCamera(): Promise<MediaResult> {
   if (!mediaSupported()) {
     return { ok: false, message: "Dein Browser unterstützt keine Kamera." };
   }

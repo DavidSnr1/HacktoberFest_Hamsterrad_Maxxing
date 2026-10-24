@@ -8,7 +8,7 @@ Stack: Next.js 16 (App Router, TypeScript), Tailwind CSS 4, shadcn/ui, Supabase 
 
 - [x] Schritt 1 – Grundgerüst: Navigation, Login per Magic Link, geschützte Routen
 - [x] Schritt 2 – Datenbank: Tabellen mit Row Level Security, Einwilligungs-Dialog
-- [x] Schritt 3 – Interview-Prototyp (Consulting): Track-Auswahl, Live-Interview mit ElevenLabs, Transkript
+- [x] Schritt 3 – Interview-Prototyp (Consulting): Track-Auswahl, vorgelesene Fragen (ElevenLabs), Aufnahme und Transkription
 - [x] Schritt 4 – Feedback: Auswertung mit Gemma 4 nach Raster, Feedback-Seite, XP
 - [ ] Schritt 5 – Weitere Tracks
 - [ ] Schritt 6 – Lebenslauf-Tab
@@ -55,7 +55,8 @@ Die übrigen Variablen (Gemini, ElevenLabs) werden in späteren Schritten gebrau
 | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Login, Datenbank | 1 |
 | `SUPABASE_SERVICE_ROLE_KEY` | Serverseitige Schreibzugriffe (Feedback, XP) und Daten löschen | 4 |
 | `GEMINI_API_KEY`, `LLM_MODEL_LIVE`, `LLM_MODEL_QUALITY` | Gemma 4 für Feedback und Lebenslauf | 4 |
-| `ELEVENLABS_API_KEY`, `ELEVENLABS_AGENT_ID_*` | Interviewer-Stimme, Spracherkennung | 3 |
+| `ELEVENLABS_API_KEY` | Fragen vorlesen (Text to Speech), Antworten transkribieren (Speech to Text) | 3 |
+| `ELEVENLABS_VOICE_ID` (optional) | Andere Stimme für die Interviewerin | 3 |
 
 ## 3. Datenbank einrichten
 
@@ -123,14 +124,14 @@ src/
   components/                 # App-Komponenten, ui/ = shadcn/ui
   lib/supabase/               # Supabase-Clients und Datenbank-Typen
   lib/consent/                # Einwilligungstexte, Prüfung und Speichern
-  lib/interview/              # Track-Konfiguration, Mikrofon/Kamera, Datenbankabfragen
-  lib/prompts/                # Interviewer-Prompts (werden ins ElevenLabs-Dashboard kopiert)
+  lib/interview/              # Tracks, Fragenablauf, Mikrofon/Kamera, Feedback, Datenbankabfragen
+  lib/prompts/                # Fragenkataloge, Bewertungsraster, Feedback-Prompt
   lib/schemas/                # Zod-Schemas für API-Eingaben
-  lib/elevenlabs.ts           # Signed URLs für die Agenten (nur serverseitig)
+  lib/elevenlabs.ts           # Text-to-Speech und Speech-to-Text (nur serverseitig)
   lib/llm.ts                  # einzige Schicht für Gemma-4-Aufrufe
   lib/gamification/xp.ts      # XP-Regeln und Vergabe
   components/interview/       # Interview-Raum im Video-Call-Look
-  app/api/                    # API-Routen (Interview anlegen/beenden, Signed URL)
+  app/api/                    # API-Routen (Interview anlegen, Antworten, beenden, Feedback, Sprachausgabe)
 supabase/
   migrations/                 # SQL-Migrationen (Schema + RLS)
   tests/                      # Test der Migrationen (npm run db:test)
@@ -159,44 +160,27 @@ Nach einem Interview bewertet Gemma 4 das Transkript nach einem Raster (Skala 1�
 
 Vor der ersten Sprachaufnahme und vor dem ersten Lebenslauf-Upload erscheint ein Einwilligungs-Dialog. Die Zustimmung wird in `consents` mit der Version des Textes gespeichert. Ändern sich die Texte in `src/lib/consent/policy.ts` wesentlich, `CONSENT_POLICY_VERSION` erhöhen, dann wird erneut gefragt. Die Texte sind ein Entwurf und sollten zusammen mit der Datenschutzerklärung geprüft werden.
 
-## ElevenLabs-Agenten einrichten
+## Interview-Format und ElevenLabs
 
-Jeder Track hat einen eigenen Agenten im ElevenLabs-Dashboard. Die App verbindet sich nur mit ihm, den Prompt pflegst du im Dashboard. Aktuell ist nur **Consulting** aktiv.
+Das Interview ist ein **One-Way-Videointerview**: Die Interviewerin liest jede Frage vor, du hast kurz Bedenkzeit und antwortest dann in die Kamera. Nachfragen gibt es keine. Der Case kommt deshalb mit allen Zahlen auf einmal.
 
-### 1. API-Key anlegen
+### Ablauf
 
-1. Auf [elevenlabs.io](https://elevenlabs.io) registrieren bzw. anmelden.
-2. Unten links auf dein Profil → **API Keys** → **Create API Key**.
-3. Namen vergeben (z. B. „Karrierecoach lokal"). Bei den Berechtigungen den Zugriff auf **ElevenAgents** (Conversational AI) erlauben, alles andere darf aus bleiben.
-4. Den Key in `.env.local` als `ELEVENLABS_API_KEY` eintragen. Er ist nur einmal sichtbar.
+1. **Interview starten** prüft die Sprach-Einwilligung und legt das Interview an (`POST /api/interviews`).
+2. Der Browser fragt nach dem Mikrofon. Die Interviewerin begrüßt dich.
+3. Pro Frage: Frage wird vorgelesen → Bedenkzeit (Countdown, „Jetzt antworten" startet sofort) → Aufnahme mit Zeitlimit → Antwort wird an `POST /api/interviews/[id]/answers` geschickt, von ElevenLabs in Text umgewandelt und im Transkript gespeichert. Die Audioaufnahme wird nicht gespeichert.
+4. Nach der letzten Frage verabschiedet sich die Interviewerin, das Interview wird abgeschlossen und das Feedback im Hintergrund erstellt.
 
-### 2. Consulting-Agenten erstellen
+Wird ein Interview unterbrochen (Tab geschlossen), sind die bisherigen Antworten gespeichert. Beim nächsten Öffnen geht es mit der nächsten unbeantworteten Frage weiter.
 
-1. Im Dashboard links **Agents** öffnen → **Create agent** → **Blank template**. Name: „Karrierecoach – Consulting".
-2. Prompt-Texte im Terminal ausgeben:
+Die Fragen stehen in `src/lib/prompts/interviewer-consulting.ts` (Text, Bedenkzeit, Antwortzeit). Die vorgelesenen Texte werden einmal erzeugt und dann zwischengespeichert, das spart ElevenLabs-Credits.
 
-   ```bash
-   npm run prompt -- consulting
-   ```
+### ElevenLabs-Key einrichten
 
-3. Im Agenten unter **Agent**:
-   - **Agent language**: Deutsch.
-   - **First message**: den Text unter „First message" einfügen.
-   - **System prompt**: den Text unter „System prompt" einfügen.
-   - **LLM**: das Modell, mit dem der Agent das Gespräch führt. Es wird von ElevenLabs aufgerufen, nicht von der App. Für flüssige Gespräche ein schnelles Modell wählen (z. B. ein Gemini-Flash-Modell).
-4. Unter **Voice** eine deutschsprachige, weibliche Stimme wählen, die zu „Lena Hartmann" passt. Als TTS-Modell ein mehrsprachiges Modell (z. B. Flash v2.5 oder Multilingual).
-5. Unter **Tools** das System-Tool **End call** aktivieren. Damit legt die Interviewerin nach der Verabschiedung selbst auf, und die App speichert das Transkript automatisch.
-6. Unter **Advanced** die **maximale Gesprächsdauer** auf 1800 Sekunden (30 Minuten) setzen.
-7. Unter **Security** die **Authentifizierung aktivieren**. Dann kann der Agent nur über die Signed URL der App gestartet werden, nicht von Fremden mit der Agent-ID.
-8. Datenschutz: Unter **Privacy** bzw. **Advanced** die Aufbewahrung von Gesprächen und Audio so kurz wie möglich einstellen bzw. das Speichern von Audio deaktivieren, falls dein Tarif das anbietet. Die App speichert selbst nur das Transkript.
-9. Agent speichern (**Publish**). Die **Agent-ID** (beginnt mit `agent_`) kopieren und in `.env.local` als `ELEVENLABS_AGENT_ID_CONSULTING` eintragen.
-10. Dev-Server neu starten.
+1. Auf [elevenlabs.io](https://elevenlabs.io) anmelden → unten links Profil → **API Keys** → **Create API Key**.
+2. Berechtigungen: **Text to Speech** und **Speech to Text** erlauben, alles andere darf aus bleiben. Optional ein Credit-Limit setzen.
+3. Den Key (beginnt mit `sk_`) in `.env.local` eintragen: `ELEVENLABS_API_KEY=sk_...` (ohne Leerzeichen oder Anführungszeichen).
+4. Optional eine andere Stimme: in der ElevenLabs **Voice Library** eine deutschsprachige Stimme auswählen, die **Voice ID** kopieren und als `ELEVENLABS_VOICE_ID` eintragen. Ohne Eintrag wird eine Standardstimme verwendet.
+5. Dev-Server neu starten.
 
-Ändert sich der Prompt in `src/lib/prompts/interviewer-consulting.ts`, musst du ihn erneut ins Dashboard kopieren.
-
-### So läuft ein Interview technisch
-
-1. „Interview starten" prüft die Sprach-Einwilligung und legt eine Zeile in `interviews` an (`POST /api/interviews`).
-2. Im Interview-Raum fragt der Browser nach dem Mikrofon. Danach holt die App beim Server eine kurzlebige Signed URL (`GET /api/elevenlabs/signed-url`). Der API-Key bleibt auf dem Server.
-3. Der Browser verbindet sich mit dem Agenten. Das Transkript wird live mitgeschrieben.
-4. Beim Beenden (Button oder Agent legt auf) speichert `POST /api/interviews/[id]/finish` Transkript und Dauer. Schließt man den Tab mitten im Gespräch, wird das bisherige Transkript als „abgebrochen" gesichert.
+Ein ElevenLabs-Agent im Dashboard ist nicht nötig.

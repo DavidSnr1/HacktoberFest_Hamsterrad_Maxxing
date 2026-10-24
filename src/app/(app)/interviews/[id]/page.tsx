@@ -3,6 +3,8 @@ import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
 import { InterviewRoom } from "@/components/interview/interview-room";
 import { getInterview } from "@/lib/interview/queries";
+import { getScript } from "@/lib/interview/script";
+import { transcriptSchema } from "@/lib/schemas/interview";
 
 export const metadata: Metadata = { title: "Interview" };
 
@@ -20,7 +22,18 @@ async function InterviewLoader({ params }: Pick<PageProps<"/interviews/[id]">, "
   if (!interview) notFound();
   if (interview.status !== "running") redirect(`/interviews/${id}/feedback`);
 
-  return <InterviewRoom interviewId={interview.id} track={interview.track} />;
+  const script = getScript(interview.track);
+  if (!script) notFound();
+  const transcript = transcriptSchema.safeParse(interview.transcript);
+
+  return (
+    <InterviewRoom
+      interviewId={interview.id}
+      track={interview.track}
+      script={script}
+      initialTranscript={transcript.success ? transcript.data : []}
+    />
+  );
 }
 
 function RoomSkeleton() {

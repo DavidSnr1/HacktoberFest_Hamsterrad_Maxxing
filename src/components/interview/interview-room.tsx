@@ -2,13 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  ConversationProvider,
-  useConversation,
-  type DisconnectionDetails,
-  type MessagePayload,
-} from "@elevenlabs/react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeftIcon,
   CircleAlertIcon,
@@ -16,53 +10,55 @@ import {
   Loader2Icon,
   MessageSquareTextIcon,
   MicIcon,
-  MicOffIcon,
-  PhoneOffIcon,
+  RotateCcwIcon,
+  SquareIcon,
   TimerIcon,
   VideoIcon,
   VideoOffIcon,
-  VolumeXIcon,
 } from "lucide-react";
 import { toast } from "sonner";
-import type { SignedUrlResponse } from "@/app/api/elevenlabs/signed-url/route";
+import type { SubmitAnswerResponse } from "@/app/api/interviews/[id]/answers/route";
 import { Button } from "@/components/ui/button";
 import type { ApiError } from "@/lib/api";
-import { checkMicrophone, openCamera } from "@/lib/interview/media";
+import { openCamera, openMicrophone } from "@/lib/interview/media";
+import type { InterviewQuestion, InterviewScript, SpeechItem } from "@/lib/interview/script";
 import { TRACKS, type InterviewTrack } from "@/lib/interview/tracks";
-import type { FinishInterviewInput, TranscriptEntry } from "@/lib/schemas/interview";
+import type { TranscriptEntry } from "@/lib/schemas/interview";
 import { cn } from "@/lib/utils";
 import { InterviewerAvatar } from "./interviewer-avatar";
 import { InterviewerTile } from "./interviewer-tile";
 import { SelfTile } from "./self-tile";
 import { formatClock, TranscriptList } from "./transcript-list";
+import { useInterviewAudio } from "./use-interview-audio";
 
-/** Hard stop as a safety net; the agent itself wraps up after about 18 minutes. */
-const MAX_DURATION_SECONDS = 30 * 60;
+type QuestionStep = "asking" | "prep" | "answering" | "processing" | "empty" | "upload-error";
 
 type Phase =
   | { kind: "lobby"; error?: string }
-  | { kind: "preparing"; step: "mic" | "connect" }
-  | { kind: "live" }
-  | { kind: "interrupted"; message: string }
-  | { kind: "saving" }
-  | { kind: "save-error"; message: string };
+  | { kind: "starting" }
+  | { kind: "intro" }
+  | { kind: "question"; index: number; step: QuestionStep; deadline?: number; message?: string }
+  | { kind: "outro" }
+  | { kind: "finishing" }
+  | { kind: "finish-error"; message: string };
 
-/** Live entry; responseId lets streamed or corrected agent messages replace each other. */
-type LiveEntry = TranscriptEntry & { responseId?: string };
+type InterviewRoomProps = {
+  interviewId: string;
+  track: InterviewTrack;
+  script: InterviewScript;
+  initialTranscript: TranscriptEntry[];
+};
 
-type InterviewRoomProps = { interviewId: string; track: InterviewTrack };
-
-export function InterviewRoom(props: InterviewRoomProps) {
-  return (
-    <ConversationProvider>
-      <Room {...props} />
-    </ConversationProvider>
-  );
+async function errorMessage(response: Response, fallback: string) {
+  const body = (await response.json().catch(() => null)) as ApiError | null;
+  return body?.error ?? fallback;
 }
 
-function Room({ interviewId, track }: InterviewRoomProps) {
+export function InterviewRoom({ interviewId, track, script, initialTranscript }: InterviewRoomProps) {
   const router = useRouter();
   const { interviewer, label } = TRACKS[track];
+  const { questions } = script;
+  const audio = useInterviewAudio();
 
   const [phase, setPhaseState] = useState<Phase>({ kind: "lobby" });
   const phaseRef = useRef<Phase>(phase);
@@ -71,163 +67,236 @@ function Room({ interviewId, track }: InterviewRoomProps) {
     setPhaseState(next);
   }, []);
 
-  const [transcript, setTranscript] = useState<LiveEntry[]>([]);
-  const transcriptRef = useRef<LiveEntry[]>([]);
-  const startedAtRef = useRef<number | null>(null);
-  const [elapsed, setElapsed] = useState(0);
+  const [transcript, setTranscript] = useState<TranscriptEntry[]>(initialTranscript);
+  const [now, setNow] = useState(() => Date.now());
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
   const [showTranscript, setShowTranscript] = useState(false);
-  const transcriptScrollRef = useRef<HTMLDivElement>(null);
+  const lastBlobRef = useRef<Blob | null>(null);
+  const speechRef = useRef(new Map<SpeechItem, Promise<string>>());
+  const aliveRef = useRef(true);
 
-  const secondsSinceStart = useCallback(() => {
-    if (startedAtRef.current === null) return 0;
-    return Math.max(0, Math.round((Date.now() - startedAtRef.current) / 1000));
+  const answeredIds = useMemo(
+    () => new Set(transcript.filter((e) => e.role === "candidate").map((e) => e.questionId)),
+    [transcript],
+  );
+  const firstOpenIndex = questions.findIndex((q) => !answeredIds.has(q.id));
+  const isResume = answeredIds.size > 0;
+
+  useEffect(() => {
+    aliveRef.current = true;
+    const speech = speechRef.current;
+    return () => {
+      aliveRef.current = false;
+      speech.forEach((url) => url.then(URL.revokeObjectURL, () => {}));
+    };
   }, []);
 
-  const buildPayload = useCallback(
-    (status: FinishInterviewInput["status"]): FinishInterviewInput => ({
-      status,
-      durationSeconds: Math.min(secondsSinceStart(), 7200),
-      transcript: transcriptRef.current.map(({ role, text, at }) => ({ role, text, at })),
-    }),
-    [secondsSinceStart],
+  /** Fetches (once) and caches the audio of an interviewer line as an object URL. */
+  const loadSpeech = useCallback(
+    (item: SpeechItem) => {
+      const cached = speechRef.current.get(item);
+      if (cached) return cached;
+      const promise = fetch(`/api/elevenlabs/speech?track=${track}&item=${encodeURIComponent(item)}`).then(
+        async (response) => {
+          if (!response.ok) throw new Error(await errorMessage(response, "Die Sprachausgabe ist nicht erreichbar."));
+          return URL.createObjectURL(await response.blob());
+        },
+      );
+      // Allow a retry on the next request if this one failed.
+      promise.catch(() => speechRef.current.delete(item));
+      speechRef.current.set(item, promise);
+      return promise;
+    },
+    [track],
   );
 
-  const saveInterview = useCallback(
-    async (status: FinishInterviewInput["status"]) => {
-      setPhase({ kind: "saving" });
+  /** Plays a line; if audio fails the text on screen is enough to continue. */
+  const speak = useCallback(
+    async (item: SpeechItem) => {
       try {
-        const response = await fetch(`/api/interviews/${interviewId}/finish`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(buildPayload(status)),
+        await audio.play(await loadSpeech(item));
+      } catch {
+        // Ignore: playback blocked or TTS unavailable for this line.
+      }
+    },
+    [audio, loadSpeech],
+  );
+
+  const finish = useCallback(async () => {
+    setPhase({ kind: "finishing" });
+    try {
+      const response = await fetch(`/api/interviews/${interviewId}/finish`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "finished" }),
+      });
+      if (!response.ok && response.status !== 409) {
+        setPhase({
+          kind: "finish-error",
+          message: await errorMessage(response, "Das Interview konnte nicht abgeschlossen werden."),
         });
-        // 409: already closed (e.g. by a second tab); the result page shows the saved state.
-        if (!response.ok && response.status !== 409) {
-          const body = (await response.json().catch(() => null)) as ApiError | null;
+        return;
+      }
+      audio.stop();
+      setCameraStream((stream) => {
+        stream?.getTracks().forEach((t) => t.stop());
+        return null;
+      });
+      router.replace(`/interviews/${interviewId}/feedback`);
+    } catch {
+      setPhase({ kind: "finish-error", message: "Keine Verbindung zum Server. Bitte versuche es erneut." });
+    }
+  }, [audio, interviewId, router, setPhase]);
+
+  const goToQuestion = useCallback(
+    async (index: number) => {
+      if (!aliveRef.current) return;
+      const question = questions[index];
+      if (!question) {
+        setPhase({ kind: "outro" });
+        await speak("outro");
+        if (aliveRef.current) await finish();
+        return;
+      }
+      setPhase({ kind: "question", index, step: "asking" });
+      // Preload the next line while this one plays.
+      const next = questions[index + 1];
+      void loadSpeech(next ? `q:${next.id}` : "outro").catch(() => {});
+      await speak(`q:${question.id}`);
+      if (!aliveRef.current || phaseRef.current.kind !== "question" || phaseRef.current.index !== index) return;
+      setPhase({ kind: "question", index, step: "prep", deadline: Date.now() + question.prepSeconds * 1000 });
+    },
+    [finish, loadSpeech, questions, setPhase, speak],
+  );
+
+  const beginAnswer = useCallback(
+    (index: number) => {
+      const question = questions[index];
+      if (!question) return;
+      audio.stopPlayback();
+      audio.startRecording();
+      setPhase({ kind: "question", index, step: "answering", deadline: Date.now() + question.answerSeconds * 1000 });
+    },
+    [audio, questions, setPhase],
+  );
+
+  const submitAnswer = useCallback(
+    async (index: number, blob: Blob) => {
+      const question = questions[index];
+      if (!question) return;
+      setPhase({ kind: "question", index, step: "processing" });
+      const form = new FormData();
+      form.append("questionId", question.id);
+      form.append("audio", blob, "answer");
+      try {
+        const response = await fetch(`/api/interviews/${interviewId}/answers`, { method: "POST", body: form });
+        if (!aliveRef.current) return;
+        if (!response.ok) {
           setPhase({
-            kind: "save-error",
-            message: body?.error ?? "Das Transkript konnte nicht gespeichert werden.",
+            kind: "question",
+            index,
+            step: "upload-error",
+            message: await errorMessage(response, "Deine Antwort konnte nicht verarbeitet werden."),
           });
           return;
         }
-        router.replace(`/interviews/${interviewId}/feedback`);
+        const { text } = (await response.json()) as SubmitAnswerResponse;
+        if (!text) {
+          setPhase({ kind: "question", index, step: "empty" });
+          return;
+        }
+        lastBlobRef.current = null;
+        setTranscript((current) => [
+          ...current.filter((e) => e.questionId !== question.id),
+          { role: "interviewer", text: question.text, at: 0, questionId: question.id },
+          { role: "candidate", text, at: 0, questionId: question.id },
+        ]);
+        void goToQuestion(index + 1);
       } catch {
         setPhase({
-          kind: "save-error",
-          message: "Keine Verbindung zum Server. Dein Transkript ist noch hier, versuche es erneut.",
+          kind: "question",
+          index,
+          step: "upload-error",
+          message: "Keine Verbindung zum Server. Deine Aufnahme ist noch da, versuche es erneut.",
         });
       }
     },
-    [buildPayload, interviewId, router, setPhase],
+    [goToQuestion, interviewId, questions, setPhase],
   );
 
-  const handleMessage = useCallback(
-    ({ message, role, response_id }: MessagePayload) => {
-      const text = message.trim();
-      if (!text) return;
-      const entry: LiveEntry = {
-        role: role === "agent" ? "interviewer" : "candidate",
-        text: text.slice(0, 5000),
-        at: Math.min(secondsSinceStart(), 7200),
-        responseId: response_id,
-      };
-      const previous = transcriptRef.current;
-      const last = previous.at(-1);
-      const replacesLast =
-        entry.role === "interviewer" &&
-        last?.role === "interviewer" &&
-        entry.responseId !== undefined &&
-        last.responseId === entry.responseId;
-      const next = replacesLast ? [...previous.slice(0, -1), { ...entry, at: last.at }] : [...previous, entry];
-      transcriptRef.current = next;
-      setTranscript(next);
-    },
-    [secondsSinceStart],
-  );
-
-  const handleDisconnect = useCallback(
-    (details: DisconnectionDetails) => {
-      if (phaseRef.current.kind !== "live") return;
-      if (details.reason === "agent") {
-        // The interviewer said goodbye and hung up.
-        void saveInterview("finished");
-      } else if (details.reason === "error") {
-        setPhase({
-          kind: "interrupted",
-          message: "Die Verbindung zum Interviewer wurde unterbrochen.",
-        });
+  const endAnswer = useCallback(
+    async (index: number) => {
+      const blob = await audio.stopRecording();
+      if (!blob) {
+        setPhase({ kind: "question", index, step: "empty" });
+        return;
       }
+      lastBlobRef.current = blob;
+      await submitAnswer(index, blob);
     },
-    [saveInterview, setPhase],
+    [audio, setPhase, submitAnswer],
   );
-
-  const conversation = useConversation({
-    onConnect: () => {
-      startedAtRef.current = Date.now();
-      setPhase({ kind: "live" });
-    },
-    onDisconnect: handleDisconnect,
-    onMessage: handleMessage,
-    onError: () => {
-      if (phaseRef.current.kind === "preparing") {
-        setPhase({
-          kind: "lobby",
-          error: "Die Verbindung zum Interviewer konnte nicht hergestellt werden. Bitte versuche es erneut.",
-        });
-      }
-    },
-  });
-  const { startSession, endSession, isSpeaking, isMuted, setMuted, getInputVolume, getOutputVolume } =
-    conversation;
 
   async function startInterview() {
-    setPhase({ kind: "preparing", step: "mic" });
-    const mic = await checkMicrophone();
+    audio.prime(); // Must run before any await (audio unlock on iOS).
+    setPhase({ kind: "starting" });
+
+    const mic = await openMicrophone();
     if (!mic.ok) {
       setPhase({ kind: "lobby", error: mic.message });
       return;
     }
+    await audio.start(mic.stream);
 
-    setPhase({ kind: "preparing", step: "connect" });
+    // The first line doubles as a check that the voice service works.
     try {
-      const response = await fetch(`/api/elevenlabs/signed-url?interviewId=${interviewId}`, {
-        cache: "no-store",
-      });
-      const body = (await response.json().catch(() => null)) as SignedUrlResponse | ApiError | null;
-      if (!response.ok || !body || !("signedUrl" in body)) {
-        setPhase({
-          kind: "lobby",
-          error: body && "error" in body ? body.error : "Der Interviewer ist gerade nicht erreichbar.",
-        });
-        return;
-      }
-      startSession({ signedUrl: body.signedUrl, connectionType: "websocket" });
-    } catch {
-      setPhase({
-        kind: "lobby",
-        error: "Keine Verbindung zum Server. Bitte prüfe deine Internetverbindung.",
-      });
+      await loadSpeech(isResume ? `q:${questions[firstOpenIndex]?.id}` : "intro");
+    } catch (error) {
+      audio.stop();
+      setPhase({ kind: "lobby", error: error instanceof Error ? error.message : "Die Sprachausgabe ist nicht erreichbar." });
+      return;
     }
+
+    if (!isResume) {
+      setPhase({ kind: "intro" });
+      void loadSpeech(`q:${questions[0].id}`).catch(() => {});
+      await speak("intro");
+    }
+    await goToQuestion(Math.max(0, firstOpenIndex));
   }
 
-  const stopCamera = useCallback(() => {
-    setCameraStream((stream) => {
-      stream?.getTracks().forEach((t) => t.stop());
-      return null;
-    });
-  }, []);
+  // Countdown: ticks while a timed step runs and fires when it ends.
+  const timedIndex = phase.kind === "question" ? phase.index : -1;
+  const timedStep = phase.kind === "question" ? phase.step : null;
+  const deadline = phase.kind === "question" ? phase.deadline : undefined;
+  useEffect(() => {
+    if (deadline === undefined || (timedStep !== "prep" && timedStep !== "answering")) return;
+    const timer = setInterval(() => {
+      const current = Date.now();
+      setNow(current);
+      if (current < deadline) return;
+      clearInterval(timer);
+      if (timedStep === "prep") beginAnswer(timedIndex);
+      else void endAnswer(timedIndex);
+    }, 250);
+    return () => clearInterval(timer);
+  }, [deadline, timedStep, timedIndex, beginAnswer, endAnswer]);
 
-  const finishInterview = useCallback(() => {
-    // Set the phase first so the resulting onDisconnect is ignored.
-    void saveInterview("finished");
-    endSession();
-    stopCamera();
-  }, [endSession, saveInterview, stopCamera]);
+  // Warn before leaving mid-interview (answers so far are already saved).
+  const inProgress = !["lobby", "finishing"].includes(phase.kind);
+  useEffect(() => {
+    if (!inProgress) return;
+    const onBeforeUnload = (event: BeforeUnloadEvent) => event.preventDefault();
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, [inProgress]);
+
+  // Release the camera when it is switched off or the room unmounts.
+  useEffect(() => () => cameraStream?.getTracks().forEach((t) => t.stop()), [cameraStream]);
 
   async function toggleCamera() {
     if (cameraStream) {
-      stopCamera();
+      setCameraStream(null);
       return;
     }
     const result = await openCamera();
@@ -235,155 +304,131 @@ function Room({ interviewId, track }: InterviewRoomProps) {
     else toast.error(result.message);
   }
 
-  const isLive = phase.kind === "live";
+  function endEarly() {
+    if (!window.confirm("Interview jetzt beenden? Bisherige Antworten werden ausgewertet.")) return;
+    audio.stopPlayback();
+    void audio.stopRecording();
+    void finish();
+  }
 
-  // Call timer and hard time limit.
-  useEffect(() => {
-    if (!isLive) return;
-    const timer = setInterval(() => {
-      const seconds = secondsSinceStart();
-      setElapsed(seconds);
-      if (seconds >= MAX_DURATION_SECONDS) {
-        toast.info("Die maximale Interviewdauer ist erreicht. Das Interview wird beendet.");
-        finishInterview();
-      }
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [isLive, secondsSinceStart, finishInterview]);
-
-  // Warn before leaving, and save what we have if the tab is closed anyway.
-  useEffect(() => {
-    if (!isLive) return;
-    const onBeforeUnload = (event: BeforeUnloadEvent) => event.preventDefault();
-    const onPageHide = () => {
-      const blob = new Blob([JSON.stringify(buildPayload("aborted"))], { type: "text/plain" });
-      navigator.sendBeacon(`/api/interviews/${interviewId}/finish`, blob);
-    };
-    window.addEventListener("beforeunload", onBeforeUnload);
-    window.addEventListener("pagehide", onPageHide);
-    return () => {
-      window.removeEventListener("beforeunload", onBeforeUnload);
-      window.removeEventListener("pagehide", onPageHide);
-    };
-  }, [isLive, buildPayload, interviewId]);
-
-  // Release the camera when leaving the room.
-  useEffect(() => () => cameraStream?.getTracks().forEach((t) => t.stop()), [cameraStream]);
-
-  // Keep the newest message in view without scrolling the whole page.
-  useEffect(() => {
-    const panel = transcriptScrollRef.current;
-    if (panel) panel.scrollTo({ top: panel.scrollHeight, behavior: "smooth" });
-  }, [transcript, showTranscript]);
-
-  if (phase.kind === "lobby" || phase.kind === "preparing") {
+  if (phase.kind === "lobby" || phase.kind === "starting") {
     return (
       <Lobby
         trackLabel={label}
         interviewerName={interviewer.name}
         interviewerRole={interviewer.role}
+        questionCount={questions.length}
+        resumeAt={isResume ? firstOpenIndex + 1 : undefined}
         error={phase.kind === "lobby" ? phase.error : undefined}
-        preparingStep={phase.kind === "preparing" ? phase.step : undefined}
+        starting={phase.kind === "starting"}
         onStart={startInterview}
       />
     );
   }
 
-  if (phase.kind === "interrupted" || phase.kind === "save-error") {
-    const hasAnswers = transcript.some((e) => e.role === "candidate");
+  if (phase.kind === "finishing" || phase.kind === "finish-error") {
     return (
-      <StatusCard
-        title={phase.kind === "interrupted" ? "Verbindung unterbrochen" : "Speichern fehlgeschlagen"}
-        message={phase.message}
-      >
-        <Button size="lg" className="h-10" onClick={() => saveInterview(hasAnswers ? "finished" : "aborted")}>
-          {phase.kind === "interrupted" ? "Interview beenden und speichern" : "Erneut speichern"}
-        </Button>
-      </StatusCard>
+      <div className="mx-auto flex max-w-md flex-col items-center gap-4 rounded-2xl border px-6 py-10 text-center">
+        <h1 className="text-lg font-semibold">
+          {phase.kind === "finishing" ? "Interview wird abgeschlossen" : "Abschließen fehlgeschlagen"}
+        </h1>
+        <p className="text-sm text-muted-foreground" role="status">
+          {phase.kind === "finishing" ? "Einen Moment, gleich geht es zu deiner Auswertung …" : phase.message}
+        </p>
+        {phase.kind === "finishing" ? (
+          <Loader2Icon className="size-6 animate-spin text-muted-foreground" aria-hidden />
+        ) : (
+          <Button size="lg" className="h-10" onClick={finish}>
+            Erneut versuchen
+          </Button>
+        )}
+      </div>
     );
   }
 
-  if (phase.kind === "saving") {
-    return (
-      <StatusCard
-        title="Interview wird gespeichert"
-        message="Einen Moment, dein Transkript wird gesichert …"
-      >
-        <Loader2Icon className="size-6 animate-spin text-muted-foreground" aria-hidden />
-      </StatusCard>
-    );
-  }
+  const question = phase.kind === "question" ? questions[phase.index] : undefined;
+  const secondsLeft = deadline !== undefined ? Math.max(0, Math.ceil((deadline - now) / 1000)) : 0;
 
   return (
     <div className="flex flex-col gap-3">
       {/* Top bar */}
       <div className="flex items-center justify-between gap-3 text-sm">
-        <div className="flex min-w-0 items-center gap-2">
-          <span className="relative flex size-2.5" aria-hidden>
-            <span className="absolute inline-flex size-full animate-ping rounded-full bg-red-500 opacity-60" />
-            <span className="relative inline-flex size-2.5 rounded-full bg-red-500" />
-          </span>
-          <span className="truncate font-medium">Mock Interview · {label}</span>
-        </div>
+        <span className="truncate font-medium">Mock Interview · {label}</span>
         <div className="flex shrink-0 items-center gap-3 text-muted-foreground">
-          <span className="flex items-center gap-1" aria-label={isMuted ? "Mikrofon stumm" : "Mikrofon aktiv"}>
-            {isMuted ? <MicOffIcon className="size-4 text-destructive" /> : <MicIcon className="size-4" />}
-            <span className="hidden sm:inline">{isMuted ? "Stumm" : "Mikrofon aktiv"}</span>
-          </span>
-          <span className="flex items-center gap-1 font-mono tabular-nums" aria-label="Interviewdauer">
-            <TimerIcon className="size-4" aria-hidden />
-            {formatClock(elapsed)}
+          {audio.isRecording && (
+            <span className="flex items-center gap-1.5 font-medium text-red-600">
+              <span className="relative flex size-2.5" aria-hidden>
+                <span className="absolute inline-flex size-full animate-ping rounded-full bg-red-500 opacity-60" />
+                <span className="relative inline-flex size-2.5 rounded-full bg-red-500" />
+              </span>
+              Aufnahme
+            </span>
+          )}
+          <span>
+            {phase.kind === "question" ? `Frage ${phase.index + 1} von ${questions.length}` : null}
+            {phase.kind === "intro" ? "Begrüßung" : null}
+            {phase.kind === "outro" ? "Abschluss" : null}
           </span>
         </div>
       </div>
 
       <div className="grid gap-3 lg:grid-cols-[1fr_20rem]">
-        {/* Stage */}
-        <div className="relative">
-          <InterviewerTile
-            name={interviewer.name}
-            role={interviewer.role}
-            isSpeaking={isSpeaking}
-            active={isLive}
-            getOutputVolume={getOutputVolume}
-            className={cn(
-              "lg:h-[min(60dvh,32rem)] lg:min-h-80",
-              showTranscript ? "h-56" : "h-[min(60dvh,32rem)] min-h-80",
-            )}
+        <div className="flex flex-col gap-3">
+          {/* Stage */}
+          <div className="relative">
+            <InterviewerTile
+              name={interviewer.name}
+              role={interviewer.role}
+              isSpeaking={audio.isSpeaking}
+              active
+              getOutputVolume={audio.getOutputVolume}
+              className="h-[min(42dvh,26rem)] min-h-64 lg:h-[min(50dvh,28rem)]"
+            />
+            <SelfTile
+              cameraStream={cameraStream}
+              isMuted={false}
+              active
+              getInputVolume={audio.getInputVolume}
+              className="absolute top-3 right-3 h-28 w-20 sm:h-32 sm:w-44"
+            />
+          </div>
+
+          {/* Question and step controls */}
+          <QuestionPanel
+            phase={phase}
+            question={question}
+            introText={script.intro}
+            outroText={script.outro}
+            interviewerName={interviewer.name}
+            secondsLeft={secondsLeft}
+            onAnswerNow={() => phase.kind === "question" && beginAnswer(phase.index)}
+            onStopAnswer={() => phase.kind === "question" && void endAnswer(phase.index)}
+            onSkipReading={audio.stopPlayback}
+            onReplay={() => question && void speak(`q:${question.id}`)}
+            onRecordAgain={() => phase.kind === "question" && beginAnswer(phase.index)}
+            onRetryUpload={() => {
+              if (phase.kind === "question" && lastBlobRef.current) void submitAnswer(phase.index, lastBlobRef.current);
+            }}
+            onSkipQuestion={() => phase.kind === "question" && void goToQuestion(phase.index + 1)}
           />
-          <SelfTile
-            cameraStream={cameraStream}
-            isMuted={isMuted}
-            active={isLive}
-            getInputVolume={getInputVolume}
-            className="absolute top-3 right-3 h-28 w-20 sm:h-32 sm:w-44"
-          />
-          {isMuted && (
-            <div className="absolute inset-x-0 bottom-16 flex justify-center">
-              <span className="flex items-center gap-1.5 rounded-full bg-black/60 px-3 py-1.5 text-xs text-white">
-                <VolumeXIcon className="size-3.5" aria-hidden />
-                Du bist stummgeschaltet. Der Interviewer hört dich nicht.
-              </span>
-            </div>
-          )}
         </div>
 
-        {/* Live transcript: side panel on large screens, toggle on small ones */}
+        {/* Answers so far */}
         <aside
           className={cn(
-            "flex-col rounded-2xl border bg-background lg:flex lg:h-[min(60dvh,32rem)] lg:min-h-80",
-            showTranscript ? "flex max-h-64" : "hidden",
+            "flex-col rounded-2xl border bg-background lg:flex lg:max-h-[calc(min(50dvh,28rem)+14rem)]",
+            showTranscript ? "flex max-h-72" : "hidden",
           )}
-          aria-label="Live-Transkript"
+          aria-label="Deine Antworten"
         >
-          <div className="border-b px-4 py-2.5 text-sm font-medium">Live-Transkript</div>
-          <div ref={transcriptScrollRef} className="flex-1 overflow-y-auto p-4">
+          <div className="border-b px-4 py-2.5 text-sm font-medium">Deine Antworten</div>
+          <div className="flex-1 overflow-y-auto p-4">
             {transcript.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                Das Gespräch erscheint hier, sobald gesprochen wird.
+                Nach jeder Antwort erscheint hier, was erkannt wurde.
               </p>
             ) : (
-              <TranscriptList entries={transcript} interviewerName={interviewer.name} />
+              <TranscriptList entries={transcript} interviewerName={interviewer.name} hideTimes />
             )}
           </div>
         </aside>
@@ -391,16 +436,6 @@ function Room({ interviewId, track }: InterviewRoomProps) {
 
       {/* Controls */}
       <div className="flex items-center justify-center gap-2 sm:gap-3">
-        <Button
-          variant={isMuted ? "destructive" : "outline"}
-          size="icon-lg"
-          className="size-12 rounded-full"
-          onClick={() => setMuted(!isMuted)}
-          aria-label={isMuted ? "Stummschaltung aufheben" : "Stummschalten"}
-          aria-pressed={isMuted}
-        >
-          {isMuted ? <MicOffIcon /> : <MicIcon />}
-        </Button>
         <Button
           variant="outline"
           size="icon-lg"
@@ -416,23 +451,146 @@ function Room({ interviewId, track }: InterviewRoomProps) {
           size="icon-lg"
           className="size-12 rounded-full lg:hidden"
           onClick={() => setShowTranscript((v) => !v)}
-          aria-label={showTranscript ? "Transkript ausblenden" : "Transkript anzeigen"}
+          aria-label={showTranscript ? "Antworten ausblenden" : "Antworten anzeigen"}
           aria-pressed={showTranscript}
         >
           <MessageSquareTextIcon />
         </Button>
-        <Button
-          size="lg"
-          className="h-12 rounded-full bg-red-600 px-5 text-white hover:bg-red-700"
-          onClick={finishInterview}
-        >
-          <PhoneOffIcon aria-hidden />
+        <Button variant="outline" size="lg" className="h-12 rounded-full px-5" onClick={endEarly}>
           Interview beenden
         </Button>
       </div>
       <p className="text-center text-xs text-muted-foreground">
-        Die Eigenansicht bleibt in deinem Browser und wird nicht übertragen.
+        Die Eigenansicht bleibt in deinem Browser. Aufgenommen wird nur der Ton deiner Antworten, um ihn
+        in Text umzuwandeln. Die Aufnahme selbst wird nicht gespeichert.
       </p>
+    </div>
+  );
+}
+
+type QuestionPanelProps = {
+  phase: Phase;
+  question: InterviewQuestion | undefined;
+  introText: string;
+  outroText: string;
+  interviewerName: string;
+  secondsLeft: number;
+  onAnswerNow: () => void;
+  onStopAnswer: () => void;
+  onSkipReading: () => void;
+  onReplay: () => void;
+  onRecordAgain: () => void;
+  onRetryUpload: () => void;
+  onSkipQuestion: () => void;
+};
+
+function QuestionPanel(props: QuestionPanelProps) {
+  const { phase, question, secondsLeft } = props;
+
+  if (phase.kind === "intro" || phase.kind === "outro" || phase.kind === "starting") {
+    return (
+      <div className="flex flex-col gap-3 rounded-2xl border p-4">
+        <p className="text-sm leading-relaxed">{phase.kind === "outro" ? props.outroText : props.introText}</p>
+        {phase.kind === "intro" && (
+          <Button variant="ghost" size="sm" className="self-start" onClick={props.onSkipReading}>
+            Begrüßung überspringen
+          </Button>
+        )}
+      </div>
+    );
+  }
+  if (phase.kind !== "question" || !question) return null;
+
+  return (
+    <div className="flex flex-col gap-4 rounded-2xl border p-4" aria-live="polite">
+      <p className="leading-relaxed font-medium">{question.text}</p>
+
+      {phase.step === "asking" && (
+        <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground">
+          <span>{props.interviewerName} stellt die Frage …</span>
+          <Button variant="ghost" size="sm" onClick={props.onSkipReading}>
+            Vorlesen überspringen
+          </Button>
+        </div>
+      )}
+
+      {phase.step === "prep" && (
+        <div className="flex flex-col gap-3">
+          <Countdown label="Bedenkzeit" seconds={secondsLeft} />
+          <div className="flex flex-wrap gap-2">
+            <Button size="lg" className="h-11 flex-1" onClick={props.onAnswerNow}>
+              <MicIcon aria-hidden />
+              Jetzt antworten
+            </Button>
+            <Button variant="outline" size="lg" className="h-11" onClick={props.onReplay}>
+              <RotateCcwIcon aria-hidden />
+              Nochmal anhören
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">Nach Ablauf der Bedenkzeit startet die Aufnahme automatisch.</p>
+        </div>
+      )}
+
+      {phase.step === "answering" && (
+        <div className="flex flex-col gap-3">
+          <Countdown label="Verbleibende Antwortzeit" seconds={secondsLeft} recording />
+          <Button size="lg" className="h-11 bg-red-600 text-white hover:bg-red-700" onClick={props.onStopAnswer}>
+            <SquareIcon className="fill-current" aria-hidden />
+            Antwort beenden
+          </Button>
+        </div>
+      )}
+
+      {phase.step === "processing" && (
+        <p className="flex items-center gap-2 text-sm text-muted-foreground" role="status">
+          <Loader2Icon className="size-4 animate-spin" aria-hidden />
+          Deine Antwort wird in Text umgewandelt …
+        </p>
+      )}
+
+      {(phase.step === "empty" || phase.step === "upload-error") && (
+        <div className="flex flex-col gap-3">
+          <p className="flex gap-2 text-sm text-destructive" role="alert">
+            <CircleAlertIcon className="mt-0.5 size-4 shrink-0" aria-hidden />
+            {phase.step === "empty"
+              ? "Wir konnten in deiner Antwort nichts verstehen. Prüfe dein Mikrofon und nimm die Antwort erneut auf."
+              : phase.message}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {phase.step === "upload-error" && (
+              <Button size="lg" className="h-11" onClick={props.onRetryUpload}>
+                Erneut senden
+              </Button>
+            )}
+            <Button
+              variant={phase.step === "empty" ? "default" : "outline"}
+              size="lg"
+              className="h-11"
+              onClick={props.onRecordAgain}
+            >
+              <MicIcon aria-hidden />
+              Neu aufnehmen
+            </Button>
+            <Button variant="ghost" size="lg" className="h-11" onClick={props.onSkipQuestion}>
+              Frage überspringen
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Countdown({ label, seconds, recording }: { label: string; seconds: number; recording?: boolean }) {
+  return (
+    <div className="flex items-center justify-between gap-2 text-sm">
+      <span className="flex items-center gap-1.5 text-muted-foreground">
+        <TimerIcon className="size-4" aria-hidden />
+        {label}
+      </span>
+      <span className={cn("font-mono text-lg tabular-nums", recording && seconds <= 15 && "text-red-600")}>
+        {formatClock(seconds)}
+      </span>
     </div>
   );
 }
@@ -441,13 +599,15 @@ type LobbyProps = {
   trackLabel: string;
   interviewerName: string;
   interviewerRole: string;
+  questionCount: number;
+  resumeAt?: number;
   error?: string;
-  preparingStep?: "mic" | "connect";
+  starting: boolean;
   onStart: () => void;
 };
 
-function Lobby({ trackLabel, interviewerName, interviewerRole, error, preparingStep, onStart }: LobbyProps) {
-  const preparing = preparingStep !== undefined;
+function Lobby(props: LobbyProps) {
+  const { trackLabel, interviewerName, interviewerRole, questionCount, resumeAt, error, starting, onStart } = props;
   return (
     <div className="mx-auto flex w-full max-w-lg flex-col gap-6">
       <Link
@@ -470,59 +630,37 @@ function Lobby({ trackLabel, interviewerName, interviewerRole, error, preparingS
 
       <ul className="flex flex-col gap-3 rounded-xl border p-4 text-sm">
         <li className="flex gap-3">
+          <MessageSquareTextIcon className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
+          {questionCount} Fragen. Jede wird vorgelesen, dann hast du kurz Bedenkzeit und antwortest in die
+          Kamera. Nachfragen gibt es keine.
+        </li>
+        <li className="flex gap-3">
           <TimerIcon className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
-          Plane etwa 15 bis 20 Minuten ein. Das Gespräch läuft komplett per Sprache.
+          Plane etwa 15 Minuten ein. Jede Antwort hat ein Zeitlimit, das du siehst.
         </li>
         <li className="flex gap-3">
           <HeadphonesIcon className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
-          Such dir einen ruhigen Ort. Mit Kopfhörern klingt es besser und es gibt kein Echo.
-        </li>
-        <li className="flex gap-3">
-          <MicIcon className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
-          Dein Browser fragt gleich nach dem Mikrofon. Bitte erlaube den Zugriff.
+          Such dir einen ruhigen Ort und stell den Ton an. Dein Browser fragt gleich nach dem Mikrofon.
         </li>
       </ul>
 
+      {resumeAt && (
+        <p className="rounded-xl bg-muted px-4 py-3 text-sm">
+          Du hast dieses Interview schon begonnen. Es geht weiter mit Frage {resumeAt}.
+        </p>
+      )}
+
       {error && (
-        <div
-          className="flex gap-3 rounded-xl bg-destructive/10 p-4 text-sm text-destructive"
-          role="alert"
-        >
+        <div className="flex gap-3 rounded-xl bg-destructive/10 p-4 text-sm text-destructive" role="alert">
           <CircleAlertIcon className="mt-0.5 size-4 shrink-0" aria-hidden />
           <p>{error}</p>
         </div>
       )}
 
-      <Button size="lg" className="h-11" onClick={onStart} disabled={preparing}>
-        {preparing && <Loader2Icon className="animate-spin" aria-hidden />}
-        {preparingStep === "mic"
-          ? "Mikrofon wird geprüft …"
-          : preparingStep === "connect"
-            ? "Verbindung wird aufgebaut …"
-            : error
-              ? "Erneut versuchen"
-              : "Interview beginnen"}
+      <Button size="lg" className="h-11" onClick={onStart} disabled={starting}>
+        {starting && <Loader2Icon className="animate-spin" aria-hidden />}
+        {starting ? "Wird vorbereitet …" : error ? "Erneut versuchen" : resumeAt ? "Interview fortsetzen" : "Interview beginnen"}
       </Button>
-    </div>
-  );
-}
-
-function StatusCard({
-  title,
-  message,
-  children,
-}: {
-  title: string;
-  message: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="mx-auto flex max-w-md flex-col items-center gap-4 rounded-2xl border px-6 py-10 text-center">
-      <h1 className="text-lg font-semibold">{title}</h1>
-      <p className="text-sm text-muted-foreground" role="status">
-        {message}
-      </p>
-      {children}
     </div>
   );
 }
