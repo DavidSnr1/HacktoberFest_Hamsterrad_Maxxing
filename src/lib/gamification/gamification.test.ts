@@ -8,15 +8,15 @@ import { computeStreak } from "./streak";
 
 test("levels follow the thresholds 0 / 201 / 501 / 1001 / 1801", () => {
   assert.equal(levelFromXp(0), 1);
-  assert.equal(levelFromXp(200), 1);
-  assert.equal(levelFromXp(201), 2);
-  assert.equal(levelFromXp(1000), 3);
-  assert.equal(levelFromXp(1001), 4);
-  assert.equal(levelFromXp(99999), 5);
+  assert.equal(levelFromXp(400), 1);
+  assert.equal(levelFromXp(401), 2);
+  assert.equal(levelFromXp(1200), 2);
+  assert.equal(levelFromXp(1201), 3);
+  assert.equal(levelFromXp(99999), 3);
 });
 
 test("progress within a level and at the maximum", () => {
-  assert.deepEqual(levelProgress(351), { level: 2, xp: 351, levelStartXp: 201, nextLevelXp: 501, percent: 50 });
+  assert.deepEqual(levelProgress(801), { level: 2, xp: 801, levelStartXp: 401, nextLevelXp: 1201, percent: 50 });
   assert.equal(levelProgress(2000).nextLevelXp, null);
   assert.equal(levelProgress(2000).percent, 100);
 });

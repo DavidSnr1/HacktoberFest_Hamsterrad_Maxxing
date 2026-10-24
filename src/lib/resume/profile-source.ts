@@ -4,7 +4,7 @@ import { getCandidateProfileRecord, getDisplayName } from "@/lib/profile/server"
 import type { ResumeProfile } from "@/lib/schemas/resume";
 import type { CurrentUser } from "@/lib/supabase/server";
 
-import { parseCandidateProfile, toResumeProfile, type CandidateProfileFormat } from "./candidate-profile";
+import { parseCandidateProfile, profileChangedAt, toResumeProfile, type CandidateProfileFormat } from "./candidate-profile";
 import exampleProfile from "./fixtures/candidate-profile.example.json";
 
 /**
@@ -45,4 +45,10 @@ export async function getResumeProfile(user: CurrentUser): Promise<ResumeProfile
   const [profile, name] = await Promise.all([activeSource.load(user.id), getDisplayName()]);
   if (!profile) return null;
   return toResumeProfile(profile, { name, email: user.email });
+}
+
+/** Latest change of resume-relevant profile data (see `profileChangedAt`), or null. */
+export async function getProfileChangedAt(user: CurrentUser): Promise<string | null> {
+  const profile = await activeSource.load(user.id);
+  return profile ? profileChangedAt(profile) : null;
 }

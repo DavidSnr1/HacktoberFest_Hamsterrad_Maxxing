@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Brand } from "@/components/brand";
-import { TrendLine } from "@/components/trend-line";
 import {
   Card,
   CardContent,
@@ -9,7 +8,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { devLoginEmails } from "@/lib/dev-login";
 import { getSupabasePublicEnv } from "@/lib/supabase/env";
+import { DevLoginForm } from "./dev-login-form";
 import { LoginForm } from "./login-form";
 
 export const metadata: Metadata = { title: "Anmelden" };
@@ -17,6 +18,7 @@ export const metadata: Metadata = { title: "Anmelden" };
 const ERROR_MESSAGES: Record<string, string> = {
   link: "Der Anmelde-Link ist ungültig oder abgelaufen. Bitte fordere einen neuen an.",
   config: "Supabase ist noch nicht konfiguriert.",
+  dev: "Diese Adresse ist für die Direktanmeldung nicht freigegeben (DEV_LOGIN_EMAILS in .env.local).",
 };
 
 const HIGHLIGHTS = [
@@ -30,24 +32,18 @@ export default function LoginPage({ searchParams }: PageProps<"/login">) {
 
   return (
     <main className="grid flex-1 lg:grid-cols-[1.1fr_1fr]">
-      <section className="graph-paper relative isolate hidden flex-col justify-between gap-12 overflow-hidden bg-navy p-10 text-white [--grid-major:oklch(1_0_0/0.08)] [--grid-minor:oklch(1_0_0/0.035)] lg:flex xl:p-14">
-        <TrendLine className="absolute inset-x-0 top-[18%] -z-10 h-[38%] w-full" />
+      <section className="hidden flex-col justify-between gap-12 border-r bg-card p-10 lg:flex xl:p-14">
         <Brand />
-        <div className="flex max-w-lg flex-col gap-5">
-          <p className="flex items-center gap-2 text-[0.7rem] font-semibold tracking-[0.14em] text-gold uppercase">
-            <span className="h-px w-6 bg-gold" aria-hidden />
-            Bewerbungstraining
-          </p>
-          <p className="font-heading text-4xl leading-tight font-semibold text-balance">
+        <div className="flex max-w-lg flex-col gap-8">
+          <h1 className="text-5xl leading-[1.02] font-extrabold tracking-[-0.04em]">
             Gut vorbereitet ins Interview bei Beratung, Bank oder Startup.
-          </p>
-          <dl className="mt-6 grid grid-cols-3 gap-6 border-t border-white/15 pt-6">
+          </h1>
+          <JobAdExcerpt />
+          <dl className="grid grid-cols-3 gap-6 border-t pt-6">
             {HIGHLIGHTS.map((item) => (
               <div key={item.term} className="flex flex-col gap-1">
-                <dt className="text-[0.7rem] font-semibold tracking-[0.12em] text-white/60 uppercase">
-                  {item.term}
-                </dt>
-                <dd className="text-sm leading-snug">{item.detail}</dd>
+                <dt className="text-sm font-semibold">{item.term}</dt>
+                <dd className="text-sm leading-snug text-muted-foreground">{item.detail}</dd>
               </div>
             ))}
           </dl>
@@ -55,9 +51,7 @@ export default function LoginPage({ searchParams }: PageProps<"/login">) {
       </section>
 
       <section className="flex flex-col items-center justify-center gap-8 px-4 py-10">
-        <div className="rounded-md bg-navy px-4 py-3 text-white lg:hidden">
-          <Brand />
-        </div>
+        <Brand className="lg:hidden" />
         <Card className="w-full max-w-sm">
           <CardHeader>
             <CardTitle className="text-2xl font-semibold">Anmelden</CardTitle>
@@ -71,7 +65,10 @@ export default function LoginPage({ searchParams }: PageProps<"/login">) {
               <ErrorNotice searchParams={searchParams} />
             </Suspense>
             {isConfigured ? (
-              <LoginForm />
+              <>
+                <LoginForm />
+                {devLoginEmails().length > 0 && <DevLoginForm />}
+              </>
             ) : (
               <div
                 className="rounded-lg border border-dashed px-3 py-3 text-sm text-muted-foreground"
@@ -89,6 +86,32 @@ export default function LoginPage({ searchParams }: PageProps<"/login">) {
         </Card>
       </section>
     </main>
+  );
+}
+
+/**
+ * A fragment of a real-looking job ad with its requirements marked, which is
+ * what the app does with the user's resume. The strokes draw in once on load.
+ */
+function JobAdExcerpt() {
+  return (
+    <figure className="flex flex-col gap-3 rounded-lg border bg-background p-5 text-[0.95rem] leading-relaxed" aria-hidden>
+      <p className="font-semibold">Praktikum Strategy Consulting (m/w/d)</p>
+      <ul className="flex flex-col gap-1.5 text-muted-foreground">
+        <li>
+          Du bringst <mark className="highlight draw-in bg-transparent text-foreground">analytisches Denkvermögen</mark> und
+          Freude an Zahlen mit.
+        </li>
+        <li>
+          Erste Praxiserfahrung, idealerweise in der{" "}
+          <mark className="highlight draw-in bg-transparent text-foreground [animation-delay:350ms]">Beratung</mark>.
+        </li>
+        <li>
+          <mark className="highlight draw-in bg-transparent text-foreground [animation-delay:700ms]">Sichere Kommunikation</mark>{" "}
+          auf Deutsch und Englisch.
+        </li>
+      </ul>
+    </figure>
   );
 }
 

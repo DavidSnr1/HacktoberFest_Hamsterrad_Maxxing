@@ -49,13 +49,12 @@ function DesktopNavList({ active }: NavListProps) {
               href={href}
               aria-current={active === href ? "page" : undefined}
               className={cn(
-                "relative flex h-14 items-center gap-2 px-3 text-sm font-medium text-white/70 transition-colors hover:text-white",
-                active === href &&
-                  "text-white after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:bg-gold",
+                "flex h-14 items-center gap-2 px-3 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground",
+                active === href && "font-semibold text-foreground",
               )}
             >
               <Icon className="size-4" aria-hidden />
-              {label}
+              <span className={cn(active === href && "highlight")}>{label}</span>
             </Link>
           </li>
         ))}
@@ -78,12 +77,11 @@ function MobileNavList({ active }: NavListProps) {
               aria-current={active === href ? "page" : undefined}
               className={cn(
                 "relative flex min-h-14 flex-col items-center justify-center gap-1 text-xs font-medium text-muted-foreground transition-colors",
-                active === href &&
-                  "text-primary before:absolute before:inset-x-6 before:top-0 before:h-0.5 before:bg-gold",
+                active === href && "font-semibold text-foreground",
               )}
             >
               <Icon className={cn("size-5", active === href && "stroke-[2.5]")} aria-hidden />
-              {label}
+              <span className={cn(active === href && "highlight")}>{label}</span>
             </Link>
           </li>
         ))}

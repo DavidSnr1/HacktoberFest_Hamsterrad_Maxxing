@@ -34,7 +34,7 @@ export function RetryFeedbackButton({ interviewId }: { interviewId: string }) {
     <div className="flex flex-col items-start gap-2">
       <Button onClick={retry} disabled={pending}>
         {pending ? <Loader2Icon className="animate-spin" aria-hidden /> : <RefreshCwIcon aria-hidden />}
-        {pending ? "Auswertung wird erstellt … (1–3 Minuten)" : "Auswertung erstellen"}
+        {pending ? "Auswertung wird erstellt … (ca. 30 Sekunden)" : "Auswertung erstellen"}
       </Button>
       {error && (
         <p className="text-sm text-destructive" role="alert">

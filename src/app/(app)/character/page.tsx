@@ -16,7 +16,6 @@ export default async function CharacterPage() {
     <div className="flex flex-col gap-12">
       <div className="flex flex-col gap-6">
         <PageHeader
-          eyebrow="Dein Fortschritt"
           title="Charakter"
           description="Jedes Interview, jeder Lebenslauf und jede Station im Profil bringt dir XP. Dein Avatar wächst mit."
         />

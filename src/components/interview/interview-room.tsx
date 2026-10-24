@@ -614,7 +614,7 @@ function Countdown({ label, seconds, recording }: { label: string; seconds: numb
         <TimerIcon className="size-4" aria-hidden />
         {label}
       </span>
-      <span className={cn("font-mono text-lg tabular-nums", recording && seconds <= 15 && "text-red-600")}>
+      <span className={cn("text-lg font-semibold tabular-nums", recording && seconds <= 15 && "text-red-600")}>
         {formatClock(seconds)}
       </span>
     </div>

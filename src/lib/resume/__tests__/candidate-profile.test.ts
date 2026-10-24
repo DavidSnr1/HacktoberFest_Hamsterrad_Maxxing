@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { parseCandidateProfile, ProfileFormatError, toResumeProfile } from "../candidate-profile";
+import { isOutdated, parseCandidateProfile, profileChangedAt, ProfileFormatError, toResumeProfile } from "../candidate-profile";
 import example from "../fixtures/candidate-profile.example.json";
 import { aliasProfile, indexProfile, isProfileEmpty, mapSourceRefs } from "../profile";
 import { resolveResume } from "../resolve";
@@ -164,5 +164,19 @@ describe("aliasProfile", () => {
     const mapped = mapSourceRefs(lenaDraft(), (id) => `x-${id}`);
     assert.equal(mapped.sections[0].items[0].sourceRefs[0], "x-exp-strategy");
     assert.equal(lenaDraft().sections[0].items[0].sourceRefs[0], "exp-strategy");
+  });
+});
+
+describe("profileChangedAt", () => {
+  it("is the latest change of a confirmed resume value; goals and suggestions don't count", () => {
+    const raw = structuredClone(example);
+    raw.volunteering[0].updatedAt = "2026-10-25T09:00:00Z";
+    raw.skills[0].updatedAt = "2026-10-26T09:00:00Z";
+    raw.skills[0].confirmed = false;
+    const changedAt = profileChangedAt(parseCandidateProfile(raw));
+    assert.equal(changedAt, "2026-10-25T09:00:00Z");
+    assert.equal(isOutdated("2026-10-25T08:00:00Z", changedAt), true);
+    assert.equal(isOutdated("2026-10-25T10:00:00Z", changedAt), false);
+    assert.equal(isOutdated("2026-10-25T10:00:00Z", null), false);
   });
 });

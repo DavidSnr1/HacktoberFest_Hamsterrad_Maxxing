@@ -6,8 +6,8 @@ import { generateAndStoreFeedback } from "@/lib/interview/feedback";
 import { finishInterviewSchema, transcriptSchema } from "@/lib/schemas/interview";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
 
-// Feedback is generated after the response (see `after` below). The quality
-// model takes 1-3 minutes; the function must stay alive for that long.
+// Feedback is generated after the response (see `after` below). It usually
+// takes ~20 s; retries can take longer, so the function stays alive up to 5 min.
 export const maxDuration = 300;
 
 export type FinishInterviewResponse = { status: "finished" | "aborted" };

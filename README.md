@@ -1,4 +1,4 @@
-# Karrierecoach
+# Hamsterrad Maxxing
 
 Webapp, die Studierende und Berufseinsteiger auf Bewerbungen vorbereitet – mit Mock-Interviews, einem auf die Stelle zugeschnittenen Lebenslauf und einem Charakter, der mit jeder Übung aufsteigt.
 
@@ -149,8 +149,8 @@ supabase/
 
 Nach einem Interview bewertet Gemma 4 das Transkript nach einem Raster (Skala 1–5): Struktur, inhaltliche Tiefe, Überzeugungskraft, Sprechweise und ein Track-Kriterium (Consulting: Case-Struktur). Dazu kommen 3 Stärken, 3 Verbesserungen und ein Übungsvorschlag.
 
-- **Ablauf:** Beim Beenden wird das Transkript sofort gespeichert. Die Auswertung läuft danach im Hintergrund (1–3 Minuten). Die Feedback-Seite zeigt so lange „Auswertung wird erstellt" und aktualisiert sich selbst. Klappt es nicht, gibt es einen Button für einen neuen Versuch.
-- **Modelle:** Zuerst `LLM_MODEL_QUALITY` (Gemma 4 31B). Antwortet es nicht oder zu langsam, springt automatisch `LLM_MODEL_LIVE` (Gemma 4 26B) ein. Alle Aufrufe laufen über `src/lib/llm.ts`.
+- **Ablauf:** Beim Beenden wird das Transkript sofort gespeichert. Die Auswertung läuft danach im Hintergrund (meist ca. 20–30 Sekunden). Die Feedback-Seite zeigt so lange „Auswertung wird erstellt" und aktualisiert sich selbst. Klappt es nicht, gibt es einen Button für einen neuen Versuch.
+- **Modell:** `LLM_MODEL_LIVE` (Gemma 4 26B). 31B brauchte 1–2 Minuten und fiel öfter aus, 26B liefert vergleichbares Feedback in ca. 20 Sekunden. Alle Aufrufe laufen über `src/lib/llm.ts`.
 - **Gegen Erfindungen:** Zitate werden gegen das Transkript geprüft; nicht wörtlich vorhandene Zitate führen zu einem neuen Versuch. Den Gesamtscore berechnet die App selbst als gewichteten Durchschnitt.
 - **Voraussetzungen:** `GEMINI_API_KEY` und `SUPABASE_SERVICE_ROLE_KEY` in `.env.local` (Feedback und XP darf nur der Server schreiben).
 - **Raster anpassen:** in `src/lib/prompts/feedback-rubrics.ts` (Beschreibungen, Anker, Gewichte). Bei Änderungen `RUBRIC_VERSION` erhöhen.
@@ -229,5 +229,5 @@ Tests: `npm run test:jobs`, `npm run db:test:jobs`. Details: `docs/handoff/job-s
 
 ## Charakter (Gamification)
 
-Tab „Charakter“ (`/character`): Avatar, Level 1–5 (ab 0 / 201 / 501 / 1.001 / 1.801 XP), XP-Balken, Streak, CV-Meilensteine, Badges, letzte XP und alle 15 Personas. XP und Level werden aus `xp_events` berechnet; geschrieben wird nur serverseitig über `awardXp`. Der Look folgt dem ersten Bereich im Profil (Consulting, Finance oder Startup).
+Tab „Charakter“ (`/character`): Avatar (Bilder in `public/avatars/<vibe>-<level>.png`), Level 1–3 (ab 0 / 401 / 1.201 XP), XP-Balken, Streak, CV-Meilensteine, Badges, letzte XP und alle 9 Personas. XP und Level werden aus `xp_events` berechnet; geschrieben wird nur serverseitig über `awardXp`. Der Look folgt dem ersten Bereich im Profil (Consulting, Finance oder Startup).
 Tests: `npx tsx --conditions=react-server --test "src/lib/gamification/*.test.ts"`. Details: `docs/handoff/gamification.md`.

@@ -37,6 +37,8 @@ type Props = {
   draft: { version: number; note: string | null; changes: ResumeChange[] } | null;
   /** Result of `hasConsent("resume")` on the server. */
   consentGranted: boolean;
+  /** The profile changed after the active version was created. */
+  outdated?: boolean;
 };
 
 const SUGGESTIONS = [
@@ -48,7 +50,17 @@ const SUGGESTIONS = [
 
 const dateFormat = new Intl.DateTimeFormat("de-DE", { dateStyle: "short", timeStyle: "short" });
 
-export function ResumeWorkspace({ id, track, targetRole, language, activeVersion, versions, draft, consentGranted }: Props) {
+export function ResumeWorkspace({
+  id,
+  track,
+  targetRole,
+  language,
+  activeVersion,
+  versions,
+  draft,
+  consentGranted,
+  outdated = false,
+}: Props) {
   const router = useRouter();
   const { requireConsent, consentDialog } = useResumeConsent(consentGranted);
   const accepted = versions.filter((v) => v.status === "accepted");
@@ -150,6 +162,18 @@ export function ResumeWorkspace({ id, track, targetRole, language, activeVersion
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start">
       <div className="space-y-3 lg:order-1">
+        {outdated && selected === activeVersion && pending !== "rebuild" ? (
+          <div className="flex flex-wrap items-center gap-3 rounded-md border border-primary/40 bg-primary/5 p-3 text-sm">
+            <p className="min-w-0 flex-1">
+              Dein Profil hat sich seit diesem Lebenslauf geändert. Neue Angaben wie Praxiserfahrung oder Projekte erscheinen erst nach
+              dem Neu-Erstellen.
+            </p>
+            <Button size="sm" onClick={rebuild} disabled={busy}>
+              <RefreshCwIcon aria-hidden />
+              Jetzt neu erstellen
+            </Button>
+          </div>
+        ) : null}
         {roleDraft === null ? (
           <div className="flex flex-wrap items-center gap-2 text-sm">
             <span className="text-muted-foreground">Rolle:</span>

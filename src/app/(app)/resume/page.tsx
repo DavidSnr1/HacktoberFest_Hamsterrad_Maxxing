@@ -8,8 +8,9 @@ import { ResumeStartForm, type ExistingResumes } from "@/components/resume/resum
 import { hasConsent } from "@/lib/consent/server";
 import { getJobPostingText } from "@/lib/jobs/handoff";
 import { isProfileEmpty } from "@/lib/resume/profile";
-import { getResumeProfile } from "@/lib/resume/profile-source";
-import { listResumeDocuments } from "@/lib/resume/repository";
+import { isOutdated } from "@/lib/resume/candidate-profile";
+import { getProfileChangedAt, getResumeProfile } from "@/lib/resume/profile-source";
+import { getActiveVersionDates, listResumeDocuments } from "@/lib/resume/repository";
 import { TRACK_TEMPLATES } from "@/lib/resume/tracks";
 import { RESUME_TRACKS, resumeTrackSchema } from "@/lib/schemas/resume";
 import { getCurrentUser } from "@/lib/supabase/server";
@@ -27,16 +28,22 @@ export default async function ResumePage({ searchParams }: PageProps<"/resume">)
   // Hand-over from the job search (TEAM-KONTEXT 5.2): `/resume?jobId=…&track=…`.
   // The job title becomes the role; the job's track (or the one in the URL) picks the resume.
   const { track, jobId } = await searchParams;
-  const [documents, profile, consentGranted, job] = await Promise.all([
+  const [documents, profile, changedAt, consentGranted, job] = await Promise.all([
     listResumeDocuments(),
     getResumeProfile(user),
+    getProfileChangedAt(user),
     hasConsent("resume"),
     typeof jobId === "string" ? getJobPostingText(jobId) : null,
   ]);
   const initialTrack = job?.track ?? resumeTrackSchema.safeParse(track).data;
   const initialRole = job?.title.slice(0, 120);
+  const contentDates = await getActiveVersionDates(documents);
   const existing: ExistingResumes = Object.fromEntries(
-    documents.map((doc) => [doc.track, { id: doc.id, language: doc.language, targetRole: doc.targetRole }]),
+    documents.map((doc) => {
+      const createdAt = contentDates.get(doc.id);
+      const outdated = createdAt !== undefined && isOutdated(createdAt, changedAt);
+      return [doc.track, { id: doc.id, language: doc.language, targetRole: doc.targetRole, outdated }];
+    }),
   );
   const profileMissing = !profile || isProfileEmpty(profile);
   const stationsMissing = Boolean(profile && !profile.experience.length && !profile.projects.length && !profile.other.length);
@@ -44,7 +51,6 @@ export default async function ResumePage({ searchParams }: PageProps<"/resume">)
   return (
     <div className="space-y-8">
       <PageHeader
-        eyebrow="Bewerbungsunterlagen"
         title="Lebenslauf"
         description="Du hast drei Lebensläufe – je einen für Finance, Consulting und Startup. Aufbau und Zuschnitt richten sich nach dem Bereich, die Rolle, auf die du dich bewirbst, steht oben im Lebenslauf. Wir nutzen nur, was in deinem Profil steht."
       />
@@ -85,7 +91,7 @@ export default async function ResumePage({ searchParams }: PageProps<"/resume">)
                     href={`/resume/${doc.id}`}
                     className="flex h-full flex-col rounded-lg border bg-card p-4 transition-colors hover:border-primary/40 hover:bg-secondary"
                   >
-                    <p className="text-[0.7rem] font-semibold tracking-[0.12em] text-muted-foreground uppercase">{template.label}</p>
+                    <p className="text-sm font-semibold text-muted-foreground">{template.label}</p>
                     <p className="mt-1 font-heading text-lg leading-snug font-semibold break-words">{doc.targetRole}</p>
                     <p className="mt-auto pt-2 text-xs text-muted-foreground tabular-nums">
                       {doc.language === "en" ? "Englisch" : "Deutsch"} · Version {doc.activeVersion} · {dateFormat.format(new Date(doc.updatedAt))}
@@ -93,7 +99,7 @@ export default async function ResumePage({ searchParams }: PageProps<"/resume">)
                   </Link>
                 ) : (
                   <div className="flex h-full flex-col rounded-lg border border-dashed p-4">
-                    <p className="text-[0.7rem] font-semibold tracking-[0.12em] text-muted-foreground uppercase">{template.label}</p>
+                    <p className="text-sm font-semibold text-muted-foreground">{template.label}</p>
                     <p className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
                       <FileTextIcon className="size-4" aria-hidden />
                       Noch nicht erstellt

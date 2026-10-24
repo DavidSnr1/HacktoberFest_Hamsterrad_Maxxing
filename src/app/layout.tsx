@@ -1,28 +1,16 @@
 import type { Metadata, Viewport } from "next";
-import { IBM_Plex_Mono, IBM_Plex_Sans, Source_Serif_4 } from "next/font/google";
+import { Schibsted_Grotesk } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
-const plexSans = IBM_Plex_Sans({
+// One family for headings and UI; headings get their character from weight and tight tracking.
+const schibsted = Schibsted_Grotesk({
   variable: "--font-sans",
   subsets: ["latin"],
 });
 
-// Headings only; the optical-size axis keeps large titles crisp.
-const sourceSerif = Source_Serif_4({
-  variable: "--font-serif",
-  subsets: ["latin"],
-  axes: ["opsz"],
-});
-
-const plexMono = IBM_Plex_Mono({
-  variable: "--font-plex-mono",
-  subsets: ["latin"],
-  weight: ["400", "500"],
-});
-
 export const metadata: Metadata = {
-  title: { default: "Karrierecoach", template: "%s · Karrierecoach" },
+  title: { default: "Hamsterrad Maxxing", template: "%s · Hamsterrad Maxxing" },
   description: "Bereite dich mit Mock-Interviews und einem passgenauen Lebenslauf auf deine Bewerbung vor.",
 };
 
@@ -36,7 +24,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="de"
-      className={`${plexSans.variable} ${sourceSerif.variable} ${plexMono.variable} h-full antialiased`}
+      className={`${schibsted.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-background text-foreground">
         {children}

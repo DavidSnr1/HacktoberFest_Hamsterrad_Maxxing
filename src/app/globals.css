@@ -5,19 +5,18 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * "Market report" look: navy brand surfaces (matching the resume export,
- * #1F3A5F) on graph paper, signal blue for actions, brass for highlights and
- * one sector colour per interview track. Serif headings, sober sans for UI.
+ * "Textmarker" look: ink on cool paper, one sans family throughout. The yellow
+ * highlighter is the only loud element and always marks what is relevant right
+ * now (active tab, progress, a strong answer), never decoration. Actions use
+ * the navy of the resume export (#1F3A5F); each interview track keeps its colour.
  */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
-  --font-mono: var(--font-plex-mono);
-  --font-heading: var(--font-serif);
+  --font-heading: var(--font-sans);
   --color-navy: var(--navy);
-  --color-navy-deep: var(--navy-deep);
-  --color-gold: var(--gold);
+  --color-marker: var(--marker);
   --color-positive: var(--positive);
   --color-consulting: var(--consulting);
   --color-finance: var(--finance);
@@ -61,45 +60,45 @@
 }
 
 :root {
-  --background: oklch(0.975 0.008 250);
-  --foreground: oklch(0.234 0.046 257);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.234 0.046 257);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.234 0.046 257);
-  --navy: oklch(0.347 0.073 256.7);
-  --navy-deep: oklch(0.26 0.06 258);
-  --primary: oklch(0.52 0.17 258);
-  --primary-foreground: oklch(0.99 0.005 258);
-  --secondary: oklch(0.945 0.025 258);
-  --secondary-foreground: oklch(0.36 0.1 258);
-  --muted: oklch(0.955 0.01 252);
-  --muted-foreground: oklch(0.49 0.03 256.7);
-  --accent: oklch(0.945 0.025 258);
-  --accent-foreground: oklch(0.234 0.046 257);
+  /* Palette: paper #F4F6F8, ink #18222E, pencil #566173, marker #FFE45C, navy #1F3A5F. */
+  --background: #f4f6f8;
+  --foreground: #18222e;
+  --card: #ffffff;
+  --card-foreground: #18222e;
+  --popover: #ffffff;
+  --popover-foreground: #18222e;
+  --navy: #1f3a5f;
+  --marker: #ffe45c;
+  --primary: #1f3a5f;
+  --primary-foreground: #ffffff;
+  --secondary: #e8ecf1;
+  --secondary-foreground: #18222e;
+  --muted: #eaedf1;
+  --muted-foreground: #566173;
+  --accent: #e8ecf1;
+  --accent-foreground: #18222e;
   --destructive: oklch(0.55 0.19 27);
-  --border: oklch(0.9 0.016 252);
-  --input: oklch(0.86 0.02 252);
-  --ring: oklch(0.6 0.15 258);
-  --gold: oklch(0.76 0.13 80);
+  --border: #dde2e8;
+  --input: #c9d0d9;
+  --ring: #4a6a93;
   --positive: oklch(0.56 0.12 160);
   --consulting: oklch(0.56 0.12 165);
   --finance: oklch(0.63 0.14 64);
   --startup: oklch(0.64 0.18 33);
-  --chart-1: oklch(0.52 0.17 258);
+  --chart-1: #1f3a5f;
   --chart-2: oklch(0.56 0.12 165);
   --chart-3: oklch(0.66 0.14 68);
   --chart-4: oklch(0.64 0.18 33);
-  --chart-5: oklch(0.347 0.073 256.7);
-  --radius: 0.375rem;
-  --sidebar: oklch(0.347 0.073 256.7);
-  --sidebar-foreground: oklch(0.985 0.003 256.7);
-  --sidebar-primary: oklch(0.72 0.105 84);
-  --sidebar-primary-foreground: oklch(0.234 0.046 257);
-  --sidebar-accent: oklch(0.4 0.075 256.7);
-  --sidebar-accent-foreground: oklch(0.985 0.003 256.7);
-  --sidebar-border: oklch(1 0 0 / 12%);
-  --sidebar-ring: oklch(0.72 0.105 84);
+  --chart-5: #566173;
+  --radius: 0.5rem;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #18222e;
+  --sidebar-primary: #1f3a5f;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e8ecf1;
+  --sidebar-accent-foreground: #18222e;
+  --sidebar-border: #dde2e8;
+  --sidebar-ring: #4a6a93;
 }
 
 .dark {
@@ -110,7 +109,7 @@
   --popover: oklch(0.23 0.035 257);
   --popover-foreground: oklch(0.96 0.006 256.7);
   --navy: oklch(0.3 0.06 257);
-  --navy-deep: oklch(0.22 0.045 258);
+  --marker: #e8cf4a;
   --primary: oklch(0.7 0.14 258);
   --primary-foreground: oklch(0.2 0.04 257);
   --consulting: oklch(0.7 0.12 165);
@@ -126,7 +125,6 @@
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.6 0.06 256.7);
-  --gold: oklch(0.78 0.1 84);
   --positive: oklch(0.7 0.11 161.9);
   --chart-1: oklch(0.8 0.06 256.7);
   --chart-2: oklch(0.65 0.06 256.7);
@@ -158,20 +156,43 @@
     @apply font-heading text-balance;
   }
   ::selection {
-    background-color: color-mix(in oklch, var(--gold) 35%, transparent);
+    background-color: color-mix(in oklch, var(--marker) 70%, transparent);
   }
 }
 
-/* Graph paper: a faint 8px grid with a stronger line every 40px. */
-@utility graph-paper {
-  background-image:
-    linear-gradient(to right, var(--grid-major) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--grid-major) 1px, transparent 1px),
-    linear-gradient(to right, var(--grid-minor) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--grid-minor) 1px, transparent 1px);
-  background-size:
-    40px 40px,
-    40px 40px,
-    8px 8px,
-    8px 8px;
+/*
+ * A highlighter stroke behind inline text: covers most of the line height
+ * like a real marker and wraps cleanly across line breaks.
+ */
+@utility highlight {
+  background-image: linear-gradient(
+    to bottom,
+    transparent 22%,
+    var(--marker) 22%,
+    var(--marker) 94%,
+    transparent 94%
+  );
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  padding-inline: 0.15em;
+  margin-inline: -0.15em;
+}
+
+/* Draws a highlight stroke from left to right; pair with `highlight`. */
+@utility draw-in {
+  background-repeat: no-repeat;
+  animation: draw-in 600ms cubic-bezier(0.3, 0.7, 0.4, 1) 200ms backwards;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+@keyframes draw-in {
+  from {
+    background-size: 0% 100%;
+  }
+  to {
+    background-size: 100% 100%;
+  }
 }

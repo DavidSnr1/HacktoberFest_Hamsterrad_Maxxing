@@ -43,7 +43,7 @@ export function BadgeList({ badges }: { badges: CharacterState["badges"] }) {
               <div
                 className={cn(
                   "flex size-9 shrink-0 items-center justify-center rounded-full",
-                  badge.earned ? "bg-gold/20 text-foreground" : "bg-muted text-muted-foreground",
+                  badge.earned ? "bg-marker/50 text-foreground" : "bg-muted text-muted-foreground",
                 )}
               >
                 <Icon className="size-4.5" aria-hidden />

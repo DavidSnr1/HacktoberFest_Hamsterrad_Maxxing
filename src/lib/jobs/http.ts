@@ -1,7 +1,7 @@
 import "server-only";
 
 // Honest, identifiable user agent. We never pretend to be a browser or another app.
-export const JOBS_USER_AGENT = "karriere-tool/0.1 (Studierendenprojekt; nicht-kommerziell)";
+export const JOBS_USER_AGENT = "hamsterrad-maxxing/0.1 (Studierendenprojekt; nicht-kommerziell)";
 
 const DEFAULT_TIMEOUT_MS = 8_000;
 // Minimum gap between two requests to the same host (best effort, per server instance).

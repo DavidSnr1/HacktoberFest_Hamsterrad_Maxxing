@@ -1,4 +1,4 @@
-# CLAUDE.md – Karrierecoach-Webapp
+# CLAUDE.md – Hamsterrad Maxxing (Webapp)
 
 Diese Datei ist deine Arbeitsgrundlage. Lies sie vollständig, bevor du Code schreibst, und halte dich an die Regeln und die Reihenfolge der Bauschritte.
 
@@ -54,10 +54,10 @@ Wenn du eine Abweichung für sinnvoll hältst, erkläre sie kurz und frage nach,
 | Interview: Fragen vorlesen | **ElevenLabs Text-to-Speech** |
 | Interview: Antworten transkribieren | **ElevenLabs Speech-to-Text** |
 | Transkription der eingesprochenen Erfahrungen | **ElevenLabs Speech-to-Text** |
-| Interview-Feedback nach dem Gespräch | **Gemma 4 31B** (`LLM_MODEL_QUALITY`), bei Ausfall automatisch Gemma 4 26B |
+| Interview-Feedback nach dem Gespräch | **Gemma 4 26B** (`LLM_MODEL_LIVE`); 31B war mit 1–2 Minuten zu langsam |
 | Lebenslauf parsen und strukturieren | **Gemma 4 31B** |
 | Eingesprochene Erfahrungen strukturieren | **Gemma 4 26B** (`LLM_MODEL_LIVE`) |
-| Lebenslauf auf Stelle zuschneiden | **Gemma 4 31B** |
+| Lebenslauf erstellen und im Chat anpassen | **Gemma 4 26B** (`LLM_MODEL_LIVE`) mit `thinking: "minimal"`; 31B brauchte 1–2 Minuten, 26B ohne Denkphase ca. 20 Sekunden |
 
 Gemma 4 (26B und 31B) verarbeitet nur **Text und Bilder**, kein Audio. Audio geht immer zuerst durch ElevenLabs, Gemma bekommt nur Text.
 
@@ -66,7 +66,7 @@ Alle Gemma-Aufrufe laufen über **eine einzige Schicht** in `src/lib/llm.ts` mit
 Erkenntnisse aus Tests mit der Gemini API (Stand Oktober 2026), in `llm.ts` bereits umgesetzt:
 - JSON-Modus (`responseMimeType`) ja, aber **kein erzwungenes `responseJsonSchema`**: Damit gerät Gemma 4 in Wortschleifen. Das Schema steht im Prompt, Zod prüft.
 - Temperatur 1.0 (Gemma-Empfehlung); niedrigere Werte begünstigten Schleifen. Längengrenze und Schleifenerkennung beim Streaming.
-- Gemma ignoriert Einstellungen zur Denkzeit; eine Feedback-Auswertung dauert mit 31B ca. 1–2 Minuten. Deshalb läuft sie im Hintergrund (`after()`), die Feedback-Seite zeigt einen Wartezustand.
+- `thinkingBudget` und `thinkingLevel` LOW/HIGH lehnt die API für Gemma ab; **`thinkingLevel: MINIMAL` funktioniert** und schaltet die Denkphase ab (Option `thinking: "minimal"` in `llm.ts`, genutzt beim Lebenslauf). Ohne diese Option gilt: eine Feedback-Auswertung dauert mit 31B ca. 1–2 Minuten, mit 26B ca. 20 Sekunden (deshalb 26B). Sie läuft im Hintergrund (`after()`), die Feedback-Seite zeigt einen Wartezustand.
 - 31B liefert zeitweise 500/503. Wiederholungen mit Zeitbudget, danach Fallback auf `LLM_MODEL_LIVE`.
 
 ---
@@ -212,7 +212,7 @@ Migrationen für alle Tabellen aus Abschnitt 5 inkl. RLS, Einwilligungs-Dialog, 
 Track-Auswahlseite (alle drei Tracks sichtbar, nur Consulting aktiv). Interview-Seite im Video-Call-Look mit Interviewer-Karte (Avatarbild, Sprechanimation anhand des Audio-Pegels), Countdown, Aufnahme-Status, Button „Interview beenden". One-Way-Format: Fragen per ElevenLabs TTS vorlesen, Bedenkzeit, Antwort aufnehmen, per ElevenLabs STT transkribieren und pro Antwort in `interviews` speichern. Mikrofon-Berechtigung sauber abfangen.
 
 **Schritt 4 – Feedback**
-Route `finish`: Transkript an Gemma 4 31B über `llm.ts` (im Hintergrund), Bewertung nach Raster als validiertes JSON, speichern in `interview_feedback`, Feedback-Seite mit Scores, Stärken, Verbesserungen. XP-Event schreiben.
+Route `finish`: Transkript an Gemma 4 26B über `llm.ts` (im Hintergrund), Bewertung nach Raster als validiertes JSON, speichern in `interview_feedback`, Feedback-Seite mit Scores, Stärken, Verbesserungen. XP-Event schreiben.
 
 **Schritt 5 – Weitere Tracks**
 Startup und Finance mit eigenen Fragenkatalogen und Rastern aktivieren. Kein neuer Architekturcode nötig, nur Konfiguration (Katalog anlegen, in `script.ts` registrieren, in `tracks.ts` aktivieren).

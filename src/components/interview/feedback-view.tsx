@@ -26,17 +26,17 @@ export function FeedbackView({ scores, strengths, improvements, exercise, summar
     <div className="flex flex-col gap-8">
       <section className="grid overflow-hidden rounded-lg border bg-card sm:grid-cols-[13rem_1fr]">
         <div className="flex flex-col items-center justify-center gap-1 bg-navy px-6 py-5 text-center text-white">
-          <span className="text-[0.7rem] font-semibold tracking-[0.14em] text-white/70 uppercase">
+          <span className="text-sm font-medium text-white/75">
             Gesamtscore
           </span>
           {scores.overall !== null ? (
             <>
               <ScoreGauge score={scores.overall} />
-              <span className="-mt-9 font-heading text-4xl leading-none font-semibold tabular-nums">
+              <span className="-mt-9 text-4xl leading-none font-extrabold tracking-[-0.03em] tabular-nums">
                 {numberFormat.format(scores.overall)}
                 <span className="ml-1 text-base font-normal text-white/60">/ 5</span>
               </span>
-              <span className="mt-1.5 text-sm font-medium text-gold">{scoreLabel(scores.overall)}</span>
+              <span className="mt-1.5 text-sm font-semibold text-marker">{scoreLabel(scores.overall)}</span>
             </>
           ) : (
             <span className="text-sm text-white/80">Kein Gesamtscore</span>
@@ -53,7 +53,7 @@ export function FeedbackView({ scores, strengths, improvements, exercise, summar
         <ol className="divide-y rounded-lg border bg-card">
           {scores.criteria.map((criterion, index) => (
             <li key={criterion.id} className={cn("flex gap-4 p-4", scoreTone(criterion.score))}>
-              <span className="w-5 shrink-0 pt-0.5 font-mono text-xs text-muted-foreground tabular-nums" aria-hidden>
+              <span className="w-5 shrink-0 pt-0.5 text-xs font-semibold text-muted-foreground tabular-nums" aria-hidden>
                 {index + 1}
               </span>
               <div className="flex min-w-0 flex-1 flex-col gap-2">
@@ -73,7 +73,7 @@ export function FeedbackView({ scores, strengths, improvements, exercise, summar
                 <ScoreBar score={criterion.score} />
                 <p className="text-sm leading-relaxed text-muted-foreground">{criterion.reasoning}</p>
                 {criterion.quote && (
-                  <blockquote className="flex gap-2 rounded-md bg-secondary px-3 py-2 font-heading text-sm italic">
+                  <blockquote className="flex gap-2 rounded-md bg-secondary px-3 py-2 text-sm italic">
                     <QuoteIcon className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" aria-hidden />
                     <span>„{criterion.quote}“</span>
                   </blockquote>
@@ -117,7 +117,7 @@ function ScoreGauge({ score }: { score: number }) {
       <path
         d="M10 60 A50 50 0 0 1 110 60"
         fill="none"
-        stroke="var(--gold)"
+        stroke="var(--marker)"
         strokeWidth="9"
         pathLength={100}
         strokeDasharray={`${percent} 100`}

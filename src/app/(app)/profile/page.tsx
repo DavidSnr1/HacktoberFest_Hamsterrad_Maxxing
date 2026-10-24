@@ -34,7 +34,6 @@ export default function ProfilePage() {
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-8">
       <PageHeader
-        eyebrow="Stammdaten"
         title="Mein Profil"
         description="Die Grundlage für Interviews, Lebenslauf und Stellenvorschläge. Automatisch erkannte Angaben nutzt die App erst, wenn du sie übernimmst."
       />
@@ -171,7 +170,7 @@ async function ProfileContent() {
                 >
                   <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                     {row.label && (
-                      <span className="text-[0.7rem] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                      <span className="text-xs font-semibold text-muted-foreground">
                         {row.label}
                       </span>
                     )}
@@ -179,7 +178,7 @@ async function ProfileContent() {
                       {row.text ?? "Keine Angabe"}
                     </span>
                     {row.details && row.details.length > 0 && (
-                      <ul className="list-disc pl-4 text-sm text-muted-foreground marker:text-gold">
+                      <ul className="list-disc pl-4 text-sm text-muted-foreground marker:text-muted-foreground">
                         {row.details.map((detail, i) => (
                           <li key={i}>{detail}</li>
                         ))}

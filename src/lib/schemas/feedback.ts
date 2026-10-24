@@ -15,7 +15,8 @@ export const llmFeedbackSchema = z.object({
     )
     .min(1)
     .max(10),
-  strengths: z.array(z.string().min(5).max(400)).length(3),
+  /** Fewer than 3 for very short interviews, so the model does not invent strengths. */
+  strengths: z.array(z.string().min(5).max(400)).min(1).max(3),
   improvements: z.array(z.string().min(5).max(400)).length(3),
   exercise: z.string().min(10).max(800),
   summary: z.string().min(10).max(1200),

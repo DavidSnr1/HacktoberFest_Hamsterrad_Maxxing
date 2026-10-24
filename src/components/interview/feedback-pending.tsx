@@ -28,7 +28,7 @@ export function FeedbackPending({ until }: { until: number }) {
       <div className="flex flex-col gap-1 text-sm">
         <p className="font-medium">Deine Auswertung wird erstellt …</p>
         <p className="text-muted-foreground">
-          Die KI bewertet dein Interview nach dem Raster. Das dauert meist 1 bis 3 Minuten. Die
+          Die KI bewertet dein Interview nach dem Raster. Das dauert meist unter einer Minute. Die
           Seite aktualisiert sich von selbst, du kannst sie aber auch schließen und später
           wiederkommen.
         </p>

@@ -22,81 +22,51 @@ export const PERSONAS: Record<Vibe, Record<Level, Persona>> = {
   consulting: {
     1: {
       title: "Case-Neuling",
-      description: "Schlichter Blazer, frisches Notizbuch und ein Stift, der beim Case hoffentlich nicht leer wird.",
+      description: "Erster Anzug, Rollkoffer im Großraumbüro und ein Laptop voller Charts, die noch niemand gesehen hat.",
       quote: "Ich strukturiere das kurz.",
     },
     2: {
-      title: "Slide-Sprinter",
-      description: "Grauer Blazer, Laptop mit Stickern der Uni-Initiative und ein XXL-Becher Matcha neben dem Trackpad.",
-      quote: "Folien sind meine Superkraft.",
-    },
-    3: {
-      title: "MECE-Magier",
-      description: "Hemdsärmel hoch, Laserpointer in der Tasche und für jedes Lebensproblem eine 2×2-Matrix.",
-      quote: "Das ist nicht MECE. Bitte nochmal.",
-    },
-    4: {
       title: "Pendel-Consultant",
-      description: "Blazer mit Vielflieger-Lanyard, Platz im Ruhebereich der 1. Klasse und Hotelstatus-Karte im Portemonnaie.",
+      description: "Ledertasche über der Schulter, Telefon am Ohr und der Klient im ICE-Großraumwagen immer dabei.",
       quote: "Der Call dauert nur bis München.",
     },
-    5: {
-      title: "Video-Call-Profi",
-      description: "Perfekt sitzender Anzug, Webcam-Lächeln auf Knopfdruck und ein Deck, das sogar die Kaffeepause quantifiziert.",
+    3: {
+      title: "Partner-Kandidat",
+      description: "Nadelstreifen, Lesebrille und die Visitenkarte griffbereit in der Lobby des Fünf-Sterne-Hotels.",
       quote: "Lass uns das mal granulieren.",
     },
   },
   finance: {
     1: {
       title: "Formel-Junior",
-      description: "Weißes Hemd, schmale Krawatte und ein ordentliches Notizbuch für die ersten Finance Technicals.",
+      description: "Fleece-Weste, Kaffee to go und das erste Modell auf zwei Bildschirmen im Trading-Floor-Ambiente.",
       quote: "Ich prüfe die Formel noch einmal.",
     },
     2: {
-      title: "DCF-Denker",
-      description: "Dunkelblauer Anzug mit Weste, rote Krawatte und eine Uhr, die bei jeder Zellverknüpfung glänzt.",
+      title: "Tower-Analyst",
+      description: "Krawatte unter der Weste, Brille auf der Nase und die Skyline als Hintergrund für jeden Deal-Call.",
       quote: "Enterprise Value, nicht Equity Value.",
     },
     3: {
-      title: "Tower-Analyst",
-      description: "Maßanzug im 35. Stock, Kaffeebecher in der Hand und das DCF-Modell im Kopf statt im Schlaf.",
-      quote: "Gib mir fünf Minuten und ein Terminal.",
-    },
-    4: {
-      title: "Pitchdeck-Globetrotter",
-      description: "Luxusuhr am Handgelenk, Business-Class-Kulturbeutel und ein Pitchdeck für drei Tage New York.",
+      title: "Eckbüro-Legende",
+      description: "Nadelstreifenanzug, Whisky im Kristallglas und die nächtliche Skyline vor dem eigenen Eckbüro.",
       quote: "Der Case? Schon durchgerechnet.",
-    },
-    5: {
-      title: "3-Uhr-Legende",
-      description: "Makelloser Anzug im nächtlichen Tower, drei leere Kaffeebecher und ein Bildschirm voller Modell-Tabs.",
-      quote: "90 Stunden sind kein Lifestyle.",
     },
   },
   startup: {
     1: {
-      title: "Hoodie-Neuling",
-      description: "Lieblingshoodie, saubere Sneaker und ein Laptop, der noch keine Tischtennis-Delle hat.",
+      title: "Garagen-Gründer",
+      description: "Hoodie, Sticker-Laptop und Kaffeebecher zwischen Umzugskartons in der ersten Garage.",
       quote: "Wir sind ein kleines Team.",
     },
     2: {
-      title: "Agile-Athlet",
-      description: "Hoodie mit Firmenlogo, Stehtisch-Setup und Tischtennisschläger für die spontane „Agile Pause“.",
-      quote: "Lass uns das nach dem Sprint spielen.",
-    },
-    3: {
-      title: "Deck-Disruptor",
-      description: "Overshirt, Laptop voller Prototyp-Sticker und ein Pitchdeck mit mindestens drei Marktgrafiken.",
+      title: "Scale-up-Builder",
+      description: "Pullover statt Hoodie, Thermobecher in der Hand und ein Großraumbüro voller neuer Teammitglieder.",
       quote: "Wir heben disruptive Synergien.",
     },
-    4: {
-      title: "Loft-Founder",
-      description: "Signature-Bomberjacke, Demo-Day-Badge und ein Loft in Berlin oder ein Atelier in München als Kulisse.",
-      quote: "Noch schnell das Deck finalisieren, dann ab in den Club.",
-    },
-    5: {
-      title: "Unicorn-Visionär",
-      description: "Cleanes Gründer-Outfit, Termsheet unterm Arm und Techno auf den Ohren für nach dem Demo Day.",
+    3: {
+      title: "Exit-Visionär",
+      description: "Leinenhemd, Sonnenbrille und der Laptop auf der Strandliege – die Firma läuft inzwischen ohne ihn.",
       quote: "Das skaliert. Jetzt wirklich.",
     },
   },

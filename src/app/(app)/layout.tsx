@@ -10,9 +10,9 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
   // parts stream in behind Suspense boundaries.
   return (
     <div className="flex min-h-full flex-1 flex-col">
-      <header className="sticky top-0 z-40 border-b border-gold/40 bg-navy text-white">
+      <header className="sticky top-0 z-40 border-b bg-card/95 backdrop-blur">
         <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between gap-4 px-4">
-          <Link href="/interviews" aria-label="Karrierecoach, zur Startseite">
+          <Link href="/interviews" aria-label="Hamsterrad Maxxing, zur Startseite">
             <Brand />
           </Link>
           <DesktopNav />

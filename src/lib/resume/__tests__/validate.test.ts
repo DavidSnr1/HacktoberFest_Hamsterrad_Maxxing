@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import { resolveResume } from "../resolve";
-import { validateResumeDraft } from "../validate";
+import { repairDraft, validateResumeDraft } from "../validate";
 import { lena, lenaDraft } from "./helpers";
 
 describe("validateResumeDraft", () => {
@@ -67,5 +67,26 @@ describe("resolveResume", () => {
   it("uses English labels for English resumes", () => {
     const resume = resolveResume(lenaDraft(), lena(), { language: "en", targetRole: "X", gaps: [] });
     assert.match(resume.sections[1].items[1].subheading ?? "", /Grade 1,7/);
+  });
+});
+
+describe("repairDraft", () => {
+  it("only removes misplaced, repeated and unsupported content and adds missing plain facts", () => {
+    const profile = lena();
+    const draft = lenaDraft();
+    draft.sections[0].items[0].bullets.push("Umsatz um 25 % gesteigert");
+    draft.sections[0].items.push({ id: "i-dup", sourceRefs: ["exp-bank"], bullets: [] });
+    draft.sections[1].items.push({ id: "i-x", sourceRefs: ["exp-cafe"], bullets: [] });
+    draft.sections[0].items.push({ id: "i-ghost", sourceRefs: ["exp-mckinsey"], bullets: ["erfunden"] });
+    const skills = draft.sections.find((s) => s.kind === "skills")!;
+    skills.items[0].bullets = ["Pivot-Tabellen"];
+    const missingSkill = skills.items.pop()!;
+
+    const repaired = repairDraft(draft, profile);
+    assert.deepEqual(validateResumeDraft(repaired, profile), []);
+    const text = JSON.stringify(repaired);
+    assert.doesNotMatch(text, /25 %|erfunden|i-ghost|Pivot/);
+    const repairedSkills = repaired.sections.find((s) => s.kind === "skills")!;
+    assert.ok(repairedSkills.items.some((i) => i.sourceRefs[0] === missingSkill.sourceRefs[0]));
   });
 });

@@ -3,12 +3,12 @@
 import { Loader2Icon } from "lucide-react";
 import { useEffect, useState } from "react";
 
-/** After this long the quality model is slower than usual (llm.ts may be retrying or falling back). */
-const SLOW_AFTER_SECONDS = 120;
+/** After this long the model is slower than usual (llm.ts may be retrying). */
+const SLOW_AFTER_SECONDS = 45;
 
 /**
- * Waiting notice for the slow resume calls (create, rebuild, revise). Gemma
- * takes one to two minutes; the running time shows that it is still working.
+ * Waiting notice for the resume calls (create, rebuild, revise), which take
+ * around 20 seconds; the running time shows that it is still working.
  */
 export function LlmProgress({ text }: { text: string }) {
   const [seconds, setSeconds] = useState(0);
@@ -30,7 +30,7 @@ export function LlmProgress({ text }: { text: string }) {
         </span>
       </p>
       <p className="text-muted-foreground" aria-live="polite">
-        {text} Das dauert meist ein bis zwei Minuten, bitte lass die Seite so lange geöffnet.
+        {text} Das dauert meist etwa 20 Sekunden, bitte lass die Seite so lange geöffnet.
       </p>
       {seconds >= SLOW_AFTER_SECONDS ? (
         <p className="text-muted-foreground" aria-live="polite">

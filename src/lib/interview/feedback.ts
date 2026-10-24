@@ -7,12 +7,11 @@ import { llmFeedbackSchema, type LlmFeedback, type StoredScores } from "@/lib/sc
 import { transcriptSchema, type TranscriptEntry } from "@/lib/schemas/interview";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Json } from "@/lib/supabase/database.types";
-import { getTranscriptStats, MIN_CANDIDATE_WORDS_FOR_FEEDBACK } from "./transcript-stats";
+import { getTranscriptStats } from "./transcript-stats";
 import { TRACKS, type InterviewTrack } from "./tracks";
 
 export type FeedbackOutcome =
   | { kind: "ready" }
-  | { kind: "too_short" }
   | { kind: "failed"; reason: "not_configured" | "unavailable" | "invalid_output" | "storage" };
 
 type InterviewForFeedback = {
@@ -65,7 +64,7 @@ function overallScore(rubric: Rubric, feedback: LlmFeedback) {
   return weights ? Math.round((total / weights) * 10) / 10 : null;
 }
 
-/** Evaluates the transcript with Gemma, without storing anything. */
+/** Evaluates the transcript with Gemma 4 26B, without storing anything. */
 export async function evaluateTranscript(input: {
   track: InterviewTrack;
   transcript: TranscriptEntry[];
@@ -79,7 +78,8 @@ export async function evaluateTranscript(input: {
     .join(" ");
 
   const { data, usage } = await generateJson(llmFeedbackSchema, {
-    tier: "quality",
+    // 26B: ~20 s instead of 1-2 min with 31B at comparable feedback quality.
+    tier: "live",
     system: feedbackSystemPrompt,
     prompt: buildFeedbackPrompt({
       track: TRACKS[input.track],
@@ -116,9 +116,6 @@ export async function generateAndStoreFeedback(interview: InterviewForFeedback):
 
   const transcript = transcriptSchema.safeParse(interview.transcript);
   if (!transcript.success) return { kind: "failed", reason: "invalid_output" };
-
-  const stats = getTranscriptStats(transcript.data);
-  if (stats.candidateWords < MIN_CANDIDATE_WORDS_FOR_FEEDBACK) return { kind: "too_short" };
 
   let result: Awaited<ReturnType<typeof evaluateTranscript>>;
   try {

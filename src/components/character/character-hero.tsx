@@ -42,10 +42,15 @@ export function CharacterHero({ progress, vibe, vibeFromProfile, streak, lastSee
 
   return (
     <section className="grid overflow-hidden rounded-xl border bg-card md:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
-      <div className="relative flex min-h-80 items-end justify-center overflow-hidden bg-[radial-gradient(ellipse_at_50%_100%,oklch(0.93_0.03_120)_0,transparent_45%),linear-gradient(180deg,oklch(0.99_0.004_256),oklch(0.96_0.008_256))] pt-6">
-        <div className="absolute bottom-3 h-6 w-56 rounded-[50%] bg-foreground/10 blur-md" aria-hidden />
-        <Avatar vibe={vibe} level={level} scale={1.05} animated celebrating={celebrating} className="relative mb-4" />
-      </div>
+      <Avatar
+        vibe={vibe}
+        level={level}
+        sizes="(min-width: 768px) 45vw, 100vw"
+        animated
+        celebrating={celebrating}
+        priority
+        className="aspect-[4/5] bg-muted md:aspect-auto md:min-h-96"
+      />
 
       <div className="flex flex-col gap-5 p-6 sm:p-8">
         <div className="flex flex-wrap items-center gap-2">
@@ -54,10 +59,10 @@ export function CharacterHero({ progress, vibe, vibeFromProfile, streak, lastSee
           </span>
           <span className="text-xs font-medium text-muted-foreground">{VIBE_LABELS[vibe]}</span>
           <span
-            className="ml-auto flex items-center gap-1.5 rounded-full border border-gold/50 px-3 py-1 text-xs font-semibold"
+            className="ml-auto flex items-center gap-1.5 rounded-full bg-marker px-3 py-1 text-xs font-semibold"
             title={streak.activeToday ? "Heute schon aktiv" : "Heute noch nicht aktiv"}
           >
-            <FlameIcon className="size-3.5 text-gold" aria-hidden />
+            <FlameIcon className="size-3.5" aria-hidden />
             {streak.current} {streak.current === 1 ? "Tag" : "Tage"} Streak
           </span>
         </div>
@@ -65,7 +70,7 @@ export function CharacterHero({ progress, vibe, vibeFromProfile, streak, lastSee
         <div className="flex flex-col gap-2">
           <h2 className="text-3xl font-semibold tracking-tight">{persona.title}</h2>
           <p className="max-w-md text-sm leading-relaxed text-muted-foreground">{persona.description}</p>
-          <p className="font-heading text-base italic">„{persona.quote}“</p>
+          <p className="text-base italic">„{persona.quote}“</p>
         </div>
 
         <div className="flex flex-col gap-2">
@@ -88,7 +93,7 @@ export function CharacterHero({ progress, vibe, vibeFromProfile, streak, lastSee
             aria-valuemax={100}
             aria-valuenow={percent}
           >
-            <div className="h-full rounded-full bg-gold transition-[width] duration-500" style={{ width: `${percent}%` }} />
+            <div className="h-full rounded-full bg-marker transition-[width] duration-500" style={{ width: `${percent}%` }} />
           </div>
         </div>
 

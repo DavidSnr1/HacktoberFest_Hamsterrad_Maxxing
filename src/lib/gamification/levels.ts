@@ -3,11 +3,11 @@
  * derived from it, never stored.
  */
 
-/** XP needed to reach level 1..5 (index 0 = level 1). */
-export const LEVEL_THRESHOLDS = [0, 201, 501, 1001, 1801] as const;
+/** XP needed to reach level 1..3 (index 0 = level 1). */
+export const LEVEL_THRESHOLDS = [0, 401, 1201] as const;
 export const MAX_LEVEL = LEVEL_THRESHOLDS.length;
 
-export type Level = 1 | 2 | 3 | 4 | 5;
+export type Level = 1 | 2 | 3;
 
 export function levelFromXp(xp: number): Level {
   for (let index = LEVEL_THRESHOLDS.length - 1; index >= 0; index -= 1) {

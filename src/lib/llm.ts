@@ -1,5 +1,5 @@
 import "server-only";
-import { ApiError, FinishReason, GoogleGenAI } from "@google/genai";
+import { ApiError, FinishReason, GoogleGenAI, ThinkingLevel } from "@google/genai";
 import { z } from "zod";
 
 /**
@@ -35,6 +35,11 @@ type BaseOptions = {
   maxOutputTokens?: number;
   /** Total time budget for the whole call, including retries and fallback. */
   deadlineMs?: number;
+  /**
+   * "minimal" switches Gemma's reasoning off (thinkingLevel MINIMAL). In tests
+   * a resume took ~20 s instead of 70–110 s; enough for rewording tasks.
+   */
+  thinking?: "default" | "minimal";
 };
 
 const DEFAULT_MAX_OUTPUT_TOKENS = 8192;
@@ -45,6 +50,8 @@ const QUALITY_SHARE = 0.6;
 const TRANSIENT_RETRY_DELAYS_MS = [2_000, 5_000];
 /** Do not start another attempt with less time left than this. */
 const MIN_ATTEMPT_MS = 45_000;
+/** Validation reason for unparseable output. */
+const INVALID_JSON = "the response was not valid JSON.";
 /** Same 2-30 characters repeated 12+ times at the end: the model is looping. */
 const LOOP_PATTERN = /(.{2,30}?)\1{12,}$/s;
 
@@ -115,6 +122,7 @@ async function call(options: CallOptions): Promise<CallResult> {
           // Native JSON mode. A forced responseJsonSchema made Gemma 4 loop
           // in tests, so the schema goes into the prompt and Zod validates.
           responseMimeType: options.json ? "application/json" : undefined,
+          thinkingConfig: options.thinking === "minimal" ? { thinkingLevel: ThinkingLevel.MINIMAL } : undefined,
           abortSignal: controller.signal,
         },
       });
@@ -252,6 +260,9 @@ ${JSON.stringify(jsonSchema)}`;
 
       // The reason names fields and rules only, never content.
       console.warn(`llm: invalid output from ${model} (attempt ${attempt + 1}): ${outcome.reason}`);
+      // Broken JSON is a random glitch: a fresh attempt takes ~20 s, while a
+      // correction prompt made Gemma reason for over a minute in tests.
+      if (outcome.reason === INVALID_JSON) continue;
       prompt = `${basePrompt}
 
 Your previous answer was invalid: ${outcome.reason}
@@ -280,7 +291,7 @@ function validate<T>(
   try {
     raw = parseJson(text);
   } catch {
-    return { ok: false, reason: "the response was not valid JSON." };
+    return { ok: false, reason: INVALID_JSON };
   }
   const parsed = schema.safeParse(raw);
   if (!parsed.success) {

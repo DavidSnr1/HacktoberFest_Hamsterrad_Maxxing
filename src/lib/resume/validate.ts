@@ -98,6 +98,59 @@ export function validateResumeDraft(draft: ResumeDraft, profile: ResumeProfile):
   return errors;
 }
 
+/**
+ * Fixes slips the model makes without reasoning (thinking "minimal") by only
+ * REMOVING content, so nothing can be invented: items with unknown or
+ * misplaced sources, repeated stations, bullets in skills/languages and
+ * bullets with numbers that are not in their sources. Duplicate item ids get
+ * a suffix. Asking the model again would cost another call; the summary is
+ * not repaired and still goes through `validateResumeDraft`.
+ */
+export function repairDraft(draft: ResumeDraft, profile: ResumeProfile): ResumeDraft {
+  const index = indexProfile(profile);
+  const usedPrimary = new Set<string>();
+  const itemIds = new Set<string>();
+
+  const sections = draft.sections.map((section) => ({
+    ...section,
+    items: section.items.flatMap((item) => {
+      const sourceRefs = item.sourceRefs.filter((ref) => index.has(ref));
+      const primary = index.get(item.sourceRefs[0]);
+      if (!primary || !ALLOWED_PRIMARY[section.kind].includes(primary.kind)) return [];
+      if (usedPrimary.has(item.sourceRefs[0])) return [];
+      usedPrimary.add(item.sourceRefs[0]);
+
+      let id = item.id;
+      for (let n = 2; itemIds.has(id); n++) id = `${item.id}-${n}`;
+      itemIds.add(id);
+
+      if (section.kind === "skills" || section.kind === "languages") return [{ ...item, id, sourceRefs, bullets: [] }];
+      const sourceNumbers = new Set<string>();
+      for (const ref of sourceRefs) {
+        const entry = index.get(ref);
+        if (entry) for (const n of extractNumbers(entryText(entry))) sourceNumbers.add(n);
+      }
+      const bullets = item.bullets.filter((bullet) => numbersMissingIn(bullet, sourceNumbers).length === 0);
+      return [{ ...item, id, sourceRefs, bullets }];
+    }),
+  }));
+
+  // Education, skills and languages are plain facts every resume shows; add
+  // the ones the model left out (no bullets, so nothing is formulated).
+  for (const section of sections) {
+    if (section.kind !== "education" && section.kind !== "skills" && section.kind !== "languages") continue;
+    for (const entry of profile[section.kind]) {
+      if (usedPrimary.has(entry.id)) continue;
+      usedPrimary.add(entry.id);
+      let id = `i-${entry.id}`;
+      for (let n = 2; itemIds.has(id); n++) id = `i-${entry.id}-${n}`;
+      itemIds.add(id);
+      section.items.push({ id, sourceRefs: [entry.id], bullets: [] });
+    }
+  }
+  return { ...draft, sections };
+}
+
 /** Adapter for the `check` option of `generateJson`; `build` turns the model output into the internal draft. */
 export function draftCheck(profile: ResumeProfile, build: (draft: LlmResumeDraft) => ResumeDraft) {
   return (value: { resume: LlmResumeDraft }): string | null => {

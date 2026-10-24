@@ -35,6 +35,3 @@ export function getTranscriptStats(transcript: TranscriptEntry[]): TranscriptSta
     fillerPer100Words: candidateWords ? Math.round((fillerWords / candidateWords) * 1000) / 10 : 0,
   };
 }
-
-/** Below this the interview is too short for a meaningful evaluation. */
-export const MIN_CANDIDATE_WORDS_FOR_FEEDBACK = 60;

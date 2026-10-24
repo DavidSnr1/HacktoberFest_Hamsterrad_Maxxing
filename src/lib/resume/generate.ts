@@ -16,7 +16,7 @@ import {
 import { aliasProfile, mapSourceRefs } from "./profile";
 import { resolveResume } from "./resolve";
 import { applyTrackTemplate, toLlmDraft } from "./tracks";
-import { draftCheck } from "./validate";
+import { draftCheck, repairDraft } from "./validate";
 
 /**
  * Contact data never goes to the model – the header is filled from the
@@ -33,9 +33,12 @@ export function profileForPrompt(profile: ResumeProfile): ResumeProfile {
  */
 export async function generateResume(profile: ResumeProfile, input: GenerateResumeInput): Promise<Resume> {
   const aliases = aliasProfile(profile);
-  const build = (draft: LlmResumeDraft) => applyTrackTemplate(draft, input.track, input.language);
+  const build = (draft: LlmResumeDraft) => repairDraft(applyTrackTemplate(draft, input.track, input.language), aliases.profile);
   const { data: result } = await generateJson(resumeGenerationSchema, {
-    tier: "quality",
+    // 26B without reasoning: ~20 s instead of 1–2 min with 31B; repairDraft catches its slips.
+    tier: "live",
+    thinking: "minimal",
+    deadlineMs: 120_000,
     system: RESUME_GENERATE_SYSTEM,
     prompt: buildResumeGeneratePrompt({
       profile: profileForPrompt(aliases.profile),
@@ -58,9 +61,12 @@ export async function reviseResume(
   input: { instruction: string; track: ResumeTrack },
 ): Promise<{ resume: Resume; note: string }> {
   const aliases = aliasProfile(profile);
-  const build = (draft: LlmResumeDraft) => applyTrackTemplate(draft, input.track, current.language);
+  const build = (draft: LlmResumeDraft) => repairDraft(applyTrackTemplate(draft, input.track, current.language), aliases.profile);
   const { data: result } = await generateJson(resumeRevisionSchema, {
-    tier: "quality",
+    // 26B without reasoning: ~20 s instead of 1–2 min with 31B; repairDraft catches its slips.
+    tier: "live",
+    thinking: "minimal",
+    deadlineMs: 120_000,
     system: RESUME_REVISE_SYSTEM,
     prompt: buildResumeRevisePrompt({
       profile: profileForPrompt(aliases.profile),

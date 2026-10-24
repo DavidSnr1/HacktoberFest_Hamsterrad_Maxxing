@@ -32,7 +32,6 @@ export default function InterviewsPage() {
     <div className="flex flex-col gap-12">
       <section className="flex flex-col gap-6">
         <PageHeader
-          eyebrow="Interviewtraining"
           title="Mock Interviews"
           description="Wähle einen Track. Ein KI-Interviewer führt mit dir ein realistisches Gespräch per Sprache, etwa 15 bis 20 Minuten."
         />

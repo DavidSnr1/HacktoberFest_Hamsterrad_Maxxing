@@ -62,8 +62,7 @@ async function FeedbackContent({ params }: Pick<PageProps<"/interviews/[id]/feed
   return (
     <>
       <PageHeader
-        eyebrow="Auswertung"
-        title={`Mock Interview · ${track.label}`}
+        title={`Auswertung: ${track.label}-Interview`}
         description={
           <span className="tabular-nums">
             {dateFormat.format(new Date(interview.started_at))}

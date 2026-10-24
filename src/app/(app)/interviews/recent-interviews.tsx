@@ -54,7 +54,7 @@ export async function RecentInterviews() {
     <div className="overflow-hidden rounded-lg border bg-card">
       {/* Column heads mirror the row layout below; phones show stacked rows instead. */}
       <div
-        className="hidden items-center gap-4 border-b bg-muted/60 px-4 py-2 text-[0.7rem] font-semibold tracking-[0.12em] text-muted-foreground uppercase sm:flex"
+        className="hidden items-center gap-4 border-b bg-muted/60 px-4 py-2 text-xs font-semibold text-muted-foreground sm:flex"
         aria-hidden
       >
         <span className="w-36">Track</span>

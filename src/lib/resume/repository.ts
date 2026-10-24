@@ -76,6 +76,22 @@ export async function listResumeDocuments(): Promise<ResumeDocumentSummary[]> {
   return data.map(toSummary);
 }
 
+/** When the content of each document's active version was created, keyed by document id. */
+export async function getActiveVersionDates(docs: ResumeDocumentSummary[]): Promise<Map<string, string>> {
+  if (docs.length === 0) return new Map();
+  const supabase = await db();
+  const { data, error } = await supabase
+    .from("resume_versions")
+    .select("document_id, version, created_at")
+    .in(
+      "document_id",
+      docs.map((d) => d.id),
+    );
+  if (error) throw error;
+  const active = new Map(docs.map((d) => [d.id, d.activeVersion]));
+  return new Map(data.filter((v) => active.get(v.document_id) === v.version).map((v) => [v.document_id, v.created_at]));
+}
+
 export async function findResumeDocumentByTrack(track: ResumeTrack): Promise<ResumeDocumentSummary | null> {
   const supabase = await db();
   const { data, error } = await supabase.from("resume_documents").select(SUMMARY_COLUMNS).eq("track", track).maybeSingle();

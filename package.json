@@ -1,5 +1,5 @@
 {
-  "name": "karrierecoach",
+  "name": "hamsterrad-maxxing",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -15,6 +15,7 @@
     "db:test:resume": "node --test supabase/tests/cv-tailoring.test.mjs",
     "test:jobs": "node --conditions=react-server --import tsx --test \"src/lib/jobs/__tests__/*.test.ts\"",
     "db:test:jobs": "node --test supabase/tests/jobs.test.mjs",
+    "test:unit": "tsx --conditions=react-server --test \"src/**/*.test.ts\"",
     "videos:generate": "tsx --conditions=react-server --env-file=.env.local scripts/generate-interviewer-videos.mts"
   },
   "dependencies": {

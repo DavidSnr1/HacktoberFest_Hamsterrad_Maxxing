@@ -3,7 +3,7 @@ import { cache } from "react";
 import { getCandidateProfileRecord } from "@/lib/profile/server";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { BADGES, type Badge } from "./badges";
-import { levelProgress, type Level, type LevelProgress } from "./levels";
+import { MAX_LEVEL, levelProgress, type Level, type LevelProgress } from "./levels";
 import { MILESTONES, profileMilestones, type Milestone } from "./milestones";
 import { vibeFromTracks, type Vibe } from "./personas";
 import { computeStreak, type StreakInfo } from "./streak";
@@ -111,7 +111,8 @@ export const getCharacterState = cache(async (): Promise<CharacterResult> => {
         resumesTailored: events.filter((e) => e.type === "resume_tailored").length,
       },
       recentEvents: events.slice(0, 8),
-      lastSeenLevel: lastSeen ? (lastSeen as Level) : null,
+      // Older rows may still hold level 4 or 5 from the former five-level curve.
+      lastSeenLevel: lastSeen ? (Math.min(lastSeen, MAX_LEVEL) as Level) : null,
     },
   };
 });

@@ -15,7 +15,18 @@ import { LlmProgress } from "./llm-progress";
 import { generateResume, updateResume } from "./resume-api";
 import { useResumeConsent } from "./resume-consent";
 
-export type ExistingResumes = Partial<Record<ResumeTrack, { id: string; language: ResumeLanguage; targetRole: string }>>;
+export type ExistingResumes = Partial<
+  Record<
+    ResumeTrack,
+    {
+      id: string;
+      language: ResumeLanguage;
+      targetRole: string;
+      /** The profile changed after the active version was created. */
+      outdated: boolean;
+    }
+  >
+>;
 
 type Props = {
   existing: ExistingResumes;
@@ -32,7 +43,8 @@ const LANGUAGE_LABELS: Record<ResumeLanguage, string> = { de: "Deutsch", en: "En
 
 /**
  * Role input + track choice. Creates the resume for the track, or – if it
- * already exists – takes the role over (same language) or rebuilds it (other language).
+ * already exists – takes the role over (same language, profile unchanged) or
+ * rebuilds it (other language, or the profile changed since).
  */
 export function ResumeStartForm({ existing, consentGranted, stationsMissing = false, initialRole = "", initialTrack }: Props) {
   const router = useRouter();
@@ -46,7 +58,9 @@ export function ResumeStartForm({ existing, consentGranted, stationsMissing = fa
 
   const current = track ? existing[track] : undefined;
   const language: ResumeLanguage = languageChoice ?? current?.language ?? "de";
-  const action = !track ? null : !current ? "create" : current.language === language ? "role" : "rebuild";
+  const action =
+    !track ? null : !current ? "create" : current.language === language && !current.outdated ? "role" : "rebuild";
+  const languageChanged = current !== undefined && current.language !== language;
   const label = track ? TRACK_TEMPLATES[track].label : "";
 
   function changeRole(value: string) {
@@ -89,7 +103,9 @@ export function ResumeStartForm({ existing, consentGranted, stationsMissing = fa
     action === "role"
       ? `Rolle in deinen ${label}-Lebenslauf übernehmen`
       : action === "rebuild"
-        ? `${label}-Lebenslauf auf ${LANGUAGE_LABELS[language]} neu erstellen`
+        ? languageChanged
+          ? `${label}-Lebenslauf auf ${LANGUAGE_LABELS[language]} neu erstellen`
+          : `${label}-Lebenslauf mit aktuellem Profil neu erstellen`
         : action === "create"
           ? `${label}-Lebenslauf erstellen`
           : "Wähle einen Bereich";
@@ -175,9 +191,15 @@ export function ResumeStartForm({ existing, consentGranted, stationsMissing = fa
           Du hast schon einen {label}-Lebenslauf. Aufbau und Inhalt bleiben gleich, nur die Rolle wird übernommen.
         </p>
       ) : null}
-      {action === "rebuild" ? (
+      {action === "rebuild" && languageChanged ? (
         <p className="text-sm text-muted-foreground">
           Dein {label}-Lebenslauf ist auf {LANGUAGE_LABELS[current?.language ?? "de"]}. Er wird auf {LANGUAGE_LABELS[language]} neu
+          erstellt; ältere Versionen bleiben abrufbar.
+        </p>
+      ) : null}
+      {action === "rebuild" && !languageChanged ? (
+        <p className="text-sm text-muted-foreground">
+          Dein Profil hat sich seit deinem {label}-Lebenslauf geändert. Er wird mit deinem aktuellen Profil und der neuen Rolle neu
           erstellt; ältere Versionen bleiben abrufbar.
         </p>
       ) : null}

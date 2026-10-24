@@ -87,6 +87,32 @@ function usable<T extends { confirmed: boolean }>(entry: T | null | undefined): 
   return Boolean(entry && (entry.confirmed || INCLUDE_UNCONFIRMED));
 }
 
+/**
+ * Latest change of a value that can appear in a resume (ISO time), or null if
+ * there is none. A resume created before this time misses newer profile data.
+ */
+export function profileChangedAt(profile: CandidateProfileFormat): string | null {
+  const entries = [
+    profile.basics.location,
+    ...profile.education,
+    ...profile.experience,
+    ...profile.projects,
+    ...profile.volunteering,
+    ...profile.skills,
+    ...profile.languages,
+  ].filter(usable);
+  let latest: string | null = null;
+  for (const { updatedAt } of entries) {
+    if (latest === null || Date.parse(updatedAt) > Date.parse(latest)) latest = updatedAt;
+  }
+  return latest;
+}
+
+/** True if the profile changed after the resume content was created. */
+export function isOutdated(contentCreatedAt: string, changedAt: string | null): boolean {
+  return changedAt !== null && Date.parse(changedAt) > Date.parse(contentCreatedAt);
+}
+
 export type AccountInfo = { name: string | null; email: string | null };
 
 function currentMonth(now: Date): string {

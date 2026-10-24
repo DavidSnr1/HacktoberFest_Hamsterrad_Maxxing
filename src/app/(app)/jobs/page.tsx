@@ -16,7 +16,6 @@ export default async function JobsPage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        eyebrow="Stellenmarkt"
         title="Stellen"
         description={
           preferences
