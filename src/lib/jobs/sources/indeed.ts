@@ -9,7 +9,7 @@ import { fetchHtml, SourceError } from "../http";
 import { buildKeywords } from "../normalize";
 import { cleanLine, htmlToText, toIsoDate } from "../text";
 import { indeedMockEnabled, scrapedSourcesEnabled } from "./flags";
-import { buildMockResults } from "./indeed-mock";
+import { buildMockResults, DEMO_ID_PREFIX } from "./indeed-mock";
 import type { JobDetails, JobSource } from "./types";
 
 // HTML scraping of public result pages. On unless JOBS_ENABLE_SCRAPED_SOURCES=false.
@@ -102,6 +102,7 @@ export const indeedSource: JobSource = {
     }
   },
   async fetchDetails({ sourceId }, { signal }) {
+    if (sourceId.startsWith(DEMO_ID_PREFIX)) return null; // example posting, nothing to load
     const html = await fetchHtml(`${BASE_URL}/viewjob?jk=${encodeURIComponent(sourceId)}`, { signal });
     const details = parseDetailPage(html);
     if (!details && looksLikeBotChallenge(html)) throw new SourceError("Quelle hat die Anfrage blockiert", "blocked");

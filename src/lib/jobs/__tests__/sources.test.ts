@@ -205,6 +205,12 @@ describe("indeed mock", () => {
     assert.equal(topUpWithExamples(drafts, params, url, 10), drafts);
   });
 
+  it("looks like ordinary Indeed results in demo mode", () => {
+    const drafts = buildMockResults({ q: "Consulting" }, url, 10, new Date(), true);
+    assertValidDrafts(drafts);
+    assert.ok(drafts.every((draft) => draft.source === "indeed" && !draft.company?.includes("Muster")));
+  });
+
   it("keeps ids stable per query", () => {
     const ids = (q: string) => buildMockResults({ q }, url).map((draft) => draft.sourceId);
     assert.deepEqual(ids("Finance"), ids("finance"));
