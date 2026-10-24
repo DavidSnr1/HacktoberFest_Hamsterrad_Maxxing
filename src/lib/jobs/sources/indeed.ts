@@ -8,11 +8,13 @@ import { extractJsonAfter, extractJsonLd, isRecord, looksLikeBotChallenge } from
 import { fetchHtml, SourceError } from "../http";
 import { buildKeywords } from "../normalize";
 import { cleanLine, htmlToText, toIsoDate } from "../text";
-import { scrapedSourcesEnabled } from "./flags";
+import { indeedMockEnabled, scrapedSourcesEnabled } from "./flags";
+import { buildMockResults } from "./indeed-mock";
 import type { JobDetails, JobSource } from "./types";
 
 // HTML scraping of public result pages. On unless JOBS_ENABLE_SCRAPED_SOURCES=false.
-// Indeed usually shows a "Security Check" to non-browser clients; we report that as "blocked".
+// Indeed usually shows a "Security Check" to non-browser clients. The search then returns example
+// postings (indeed-mock.ts) unless JOBS_INDEED_MOCK=false, which reports the source as "blocked".
 const BASE_URL = "https://de.indeed.com";
 const STATE_MARKER = 'window.mosaic.providerData["mosaic-provider-jobcards"]=';
 
@@ -88,7 +90,14 @@ export const indeedSource: JobSource = {
   kind: "scraped",
   isEnabled: scrapedSourcesEnabled,
   async search(params, { signal }) {
-    return parseSearchPage(await fetchHtml(buildSearchUrl(params), { signal }));
+    const url = buildSearchUrl(params);
+    try {
+      return parseSearchPage(await fetchHtml(url, { signal }));
+    } catch (error) {
+      // No bypass of the security check: fall back to labelled example postings instead.
+      if (!indeedMockEnabled()) throw error;
+      return buildMockResults(params, url);
+    }
   },
   async fetchDetails({ sourceId }, { signal }) {
     const html = await fetchHtml(`${BASE_URL}/viewjob?jk=${encodeURIComponent(sourceId)}`, { signal });

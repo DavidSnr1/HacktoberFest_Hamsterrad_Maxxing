@@ -6,6 +6,7 @@ TEAM-KONTEXT 4C hat das Scraping von LinkedIn, Indeed und StepStone ursprünglic
 
 - `JOBS_ENABLE_SCRAPED_SOURCES=false` schaltet die drei Adapter ab; ohne die Variable oder mit `true` laufen sie mit.
 - Die Adapter umgehen keinen Bot-Schutz: kein Captcha-Lösen, keine Stealth-Tricks, keine Proxys, keine gefälschten Browser- oder App-Kennungen. Sie senden einen eigenen, ehrlichen User-Agent. Zeigt ein Portal eine Prüfseite oder antwortet mit 403/429, meldet der Adapter „blockiert“ und die anderen Quellen liefern weiter.
+- **Indeed-Beispielstellen (entschieden von David am 2026-10-24):** Ist Indeed blockiert oder nicht erreichbar, liefert der Adapter 5 erfundene Stellen passend zur Suche (`src/lib/jobs/sources/indeed-mock.ts`). Sie haben die Quelle `indeed-demo`, Platzhalterfirmen („Muster …“), das Badge „Indeed · Beispiel“, einen Hinweis in der Detailansicht und verlinken auf die echte Indeed-Suche („Auf Indeed suchen“). Die Quellenzeile zeigt „Indeed (Beispieldaten)“. `JOBS_INDEED_MOCK=false` schaltet das ab, dann erscheint Indeed wieder als „blockiert“.
 - Entfernen ginge weiterhin ohne Umbau: die drei Dateien `src/lib/jobs/sources/{linkedin,indeed,stepstone}.ts` löschen und die Einträge in `sources/index.ts` streichen.
 
 ## 1. Was gebaut wurde
@@ -39,7 +40,7 @@ Neuer Tab **„Stellen“** (`/jobs`):
 | Adzuna | offizielle API | Kostenloser Key nötig, nur aktiv, wenn `ADZUNA_APP_ID`/`ADZUNA_APP_KEY` gesetzt sind. **Nicht live getestet** (kein Key vorhanden). |
 | StepStone | Scraping (Schalter) | Daten aus `window.__PRELOADED_STATE__` der Suchseite, Beschreibung aus dem JSON-LD der Detailseite. Live getestet: funktioniert. |
 | LinkedIn | Scraping (Schalter) | Öffentliche Gast-Jobsuche, auf Deutschland begrenzt (`geoId`). Live getestet: meist 10 Treffer inklusive Beschreibung und Bewerberzahl, gelegentlich JavaScript-Prüfung oder 429 (wird als „blockiert“ gemeldet). Unzuverlässig. |
-| Indeed | Scraping (Schalter) | Zeigt fast immer „Security Check“, die Quelle wird dann als „blockiert“ angezeigt. Der Parser ist nur gegen synthetisches Markup getestet. |
+| Indeed | Scraping (Schalter) | Antwortet fast immer mit 403 bzw. „Security Check“; der RSS-Feed ist abgeschaltet (404), eine offene Such-API gibt es nicht. Dann liefert der Adapter **Beispielstellen** (siehe unten). Der Parser ist nur gegen synthetisches Markup getestet. |
 
 ## 2. Neue Migrationen (in dieser Reihenfolge)
 
@@ -64,6 +65,8 @@ Am Ende von `.env.example` anhängen:
 # --- Feature C – Stellen-Scraper ---
 # LinkedIn/Indeed/StepStone-Adapter (siehe docs/handoff/job-scraper.md). Standard: an, false schaltet sie ab.
 JOBS_ENABLE_SCRAPED_SOURCES=true
+# Indeed blockiert fast immer; dann zeigt der Tab Beispielstellen (als „Beispiel“ markiert). false: Indeed als „blockiert“ melden.
+JOBS_INDEED_MOCK=true
 # Optional: Adzuna API (https://developer.adzuna.com), kostenloser Key
 ADZUNA_APP_ID=
 ADZUNA_APP_KEY=

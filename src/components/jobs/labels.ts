@@ -21,6 +21,7 @@ export const SOURCE_LABELS: Record<string, string> = {
   stepstone: "StepStone",
   linkedin: "LinkedIn",
   indeed: "Indeed",
+  "indeed-demo": "Indeed · Beispiel",
 };
 
 export const COMPETITION_LABELS: Record<CompetitionLevel, string> = {

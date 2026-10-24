@@ -64,6 +64,13 @@ export const jobOutlookSchema = z.object({
 });
 export type JobOutlook = z.infer<typeof jobOutlookSchema>;
 
+// Example postings the Indeed adapter returns while Indeed blocks automated requests. Not real jobs.
+export const INDEED_DEMO_SOURCE = "indeed-demo";
+
+export function isDemoSource(source: string): boolean {
+  return source === INDEED_DEMO_SOURCE;
+}
+
 // What a source adapter returns: no internal id yet, but the source's own id.
 export const jobPostingDraftSchema = jobPostingSchema.omit({ id: true }).extend({
   sourceId: z.string().min(1),

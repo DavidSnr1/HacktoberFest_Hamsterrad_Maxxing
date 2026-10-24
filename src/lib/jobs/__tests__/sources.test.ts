@@ -1,11 +1,13 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { jobPostingDraftSchema } from "@/lib/schemas/job-posting";
+import { INDEED_DEMO_SOURCE, jobPostingDraftSchema } from "@/lib/schemas/job-posting";
 import { SourceError } from "../http";
+import { mergeResults } from "../merge";
 import * as arbeitnow from "../sources/arbeitnow";
 import * as arbeitsagentur from "../sources/arbeitsagentur";
 import * as indeed from "../sources/indeed";
+import { buildMockResults } from "../sources/indeed-mock";
 import * as linkedin from "../sources/linkedin";
 import * as stepstone from "../sources/stepstone";
 import { fixture, jsonFixture } from "./helpers";
@@ -165,5 +167,36 @@ describe("indeed", () => {
 
   it("reports the security check as blocked", () => {
     assertBlocked(() => indeed.parseSearchPage(fixture("indeed-challenge.html")));
+  });
+});
+
+describe("indeed mock", () => {
+  const url = "https://de.indeed.com/jobs?q=Praktikum";
+
+  it("builds labelled example postings that survive the merge filters", () => {
+    const params = { q: "Praktikum Consulting", location: "Frankfurt am Main", track: "consulting", type: "internship" } as const;
+    const drafts = buildMockResults(params, url);
+    assertValidDrafts(drafts);
+    assert.ok(drafts.every((draft) => draft.source === INDEED_DEMO_SOURCE && draft.sourceUrl === url));
+    assert.ok(drafts.every((draft) => draft.company?.startsWith("Muster")));
+    assert.equal(drafts[0]?.title, "Praktikum Consulting (m/w/d)");
+    assert.equal(mergeResults([drafts], params).length, drafts.length);
+  });
+
+  it("takes type and track from the query when no filter is set", () => {
+    const drafts = mergeResults([buildMockResults({ q: "Praktikum Consulting" }, url)], {});
+    assert.equal(drafts.length, 5);
+    assert.ok(drafts.every((draft) => draft.employmentType === "internship" && draft.track === "consulting"));
+  });
+
+  it("varies the job type when none is chosen", () => {
+    const drafts = mergeResults([buildMockResults({}, url)], {});
+    assert.deepEqual(new Set(drafts.map((draft) => draft.employmentType)), new Set(["internship", "working_student", "entry"]));
+  });
+
+  it("keeps ids stable per query", () => {
+    const ids = (q: string) => buildMockResults({ q }, url).map((draft) => draft.sourceId);
+    assert.deepEqual(ids("Finance"), ids("finance"));
+    assert.notDeepEqual(ids("Finance"), ids("Strategy"));
   });
 });

@@ -1,13 +1,13 @@
 "use client";
 
-import { ArrowLeftIcon, ExternalLinkIcon, FileTextIcon } from "lucide-react";
+import { ArrowLeftIcon, ExternalLinkIcon, FileTextIcon, TriangleAlertIcon } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { JobPosting } from "@/lib/schemas/job-posting";
+import { isDemoSource, type JobPosting } from "@/lib/schemas/job-posting";
 import { JobFacts } from "./job-facts";
 import { JobOutlook } from "./job-outlook";
 import { fetchJob } from "./jobs-api";
@@ -56,6 +56,7 @@ export function JobDetail({ posting, earliestStart, saved, savePending, onToggle
   const loading = !current;
   const full = current?.posting ?? posting;
   const description = full.description || posting.description;
+  const demo = isDemoSource(posting.source);
 
   return (
     <Card>
@@ -86,12 +87,21 @@ export function JobDetail({ posting, earliestStart, saved, savePending, onToggle
             className={buttonVariants({ variant: "outline" })}
           >
             <ExternalLinkIcon aria-hidden />
-            Zur Originalanzeige
+            {demo ? "Auf Indeed suchen" : "Zur Originalanzeige"}
           </a>
           <SaveJobButton saved={saved} pending={savePending} onToggle={onToggleSave} withLabel />
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
+        {demo && (
+          <p className="flex items-start gap-1.5 text-sm text-amber-700 dark:text-amber-400">
+            <TriangleAlertIcon className="mt-0.5 size-4 shrink-0" aria-hidden />
+            <span>
+              Beispielanzeige: Indeed blockiert automatische Abfragen, deshalb ist diese Stelle erfunden. Echte
+              Treffer findest du über „Auf Indeed suchen“.
+            </span>
+          </p>
+        )}
         <JobFacts insights={full.insights} />
         {/* Loaded after the details so the detail page is fetched only once. */}
         {!loading && <JobOutlook jobId={posting.id} earliestStart={earliestStart} />}

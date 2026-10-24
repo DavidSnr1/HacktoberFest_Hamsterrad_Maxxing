@@ -3,6 +3,7 @@ import "server-only";
 import { createHash } from "node:crypto";
 
 import {
+  isDemoSource,
   sourceStatusSchema,
   type JobPosting,
   type JobPostingDraft,
@@ -77,9 +78,12 @@ export async function searchJobs(params: JobSearchParams): Promise<JobSearchResu
   const settled = await Promise.allSettled(sources.map((source) => runSource(source, params)));
   const statuses: SourceStatus[] = sources.map((source, index) => {
     const outcome = settled[index];
-    return outcome?.status === "fulfilled"
-      ? { id: source.id, label: source.label, ok: true, count: outcome.value.length }
-      : { id: source.id, label: source.label, ok: false, count: 0, error: errorMessage(outcome?.reason) };
+    if (outcome?.status !== "fulfilled") {
+      return { id: source.id, label: source.label, ok: false, count: 0, error: errorMessage(outcome?.reason) };
+    }
+    const demo = outcome.value.some((draft) => isDemoSource(draft.source));
+    const label = demo ? `${source.label} (Beispieldaten)` : source.label;
+    return { id: source.id, label, ok: true, count: outcome.value.length };
   });
   const drafts = mergeResults(
     settled.map((outcome) => (outcome.status === "fulfilled" ? outcome.value : [])),
