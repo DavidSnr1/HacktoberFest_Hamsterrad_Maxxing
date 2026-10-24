@@ -70,7 +70,7 @@ Keine. Die Migration hält sich an die Namensregel `202611011xxxxx`. Die Dateina
 
 ## 6. Offene Integrationspunkte
 
-> **Stand nach der Integration ins Repo:** Punkte 1, 2, 4 und 5 sind erledigt. Profilquelle = `onboardingProfileSource` (`getCandidateProfileRecord`), Name aus `profiles.display_name`, `generateJson` liefert `{ data }`, Einwilligung über `useConsentGate` (Status per `hasConsent("resume")` von der Seite, siehe `resume-consent.tsx`), `textarea` per `npx shadcn add` ergänzt. Punkt 3 wird mit Feature C verbunden.
+> **Stand nach der Integration ins Repo:** Punkte 1, 2, 4 und 5 sind erledigt. Profilquelle = `onboardingProfileSource` (`getCandidateProfileRecord`), Name aus `profiles.display_name`, `generateJson` liefert `{ data }`, Einwilligung über `useConsentGate` (Status per `hasConsent("resume")` von der Seite, siehe `resume-consent.tsx`), `textarea` per `npx shadcn add` ergänzt. Punkt 3 ist mit Feature C verbunden: `/resume?jobId=…` übernimmt den Stellentitel als Rolle (max. 120 Zeichen) und den Bereich der Stelle.
 
 1. **Profilquelle**: In `src/lib/resume/profile-source.ts` `activeSource` von `exampleProfileSource` auf den echten Speicherort umstellen. `load(userId)` muss das Profil-JSON liefern (oder `null`), `parseCandidateProfile` prüft es. **Sonst muss nichts geändert werden.**
 2. **Name im Konto**: Klären, wo der Name des Nutzers liegt. Erwartet wird er in `user_metadata` (`full_name`, `name` oder `display_name`); sonst `accountName` in `profile-source.ts` anpassen.

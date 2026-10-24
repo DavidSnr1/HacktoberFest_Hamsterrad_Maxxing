@@ -112,7 +112,7 @@ Tests: `npm run test:jobs`, `npm run db:test:jobs`. Details: `docs/handoff/job-s
 
 ## 6. Offene Integrationspunkte
 
-> **Stand nach der Integration ins Repo:** Profilquelle = `onboardingProfileSource` (`getCandidateProfileRecord`, dieselbe Quelle wie Feature A). `generateJson` liefert `{ data }`; `createClient()`/`createAdminClient()` können `null` liefern und laufen deshalb über `src/lib/jobs/db.ts`. `badge` per `npx shadcn add` ergänzt. Die Übergabe an den Lebenslauf wird beim Merge mit Feature A verbunden.
+> **Stand nach der Integration ins Repo:** Profilquelle = `onboardingProfileSource` (`getCandidateProfileRecord`, dieselbe Quelle wie Feature A). `generateJson` liefert `{ data }`; `createClient()`/`createAdminClient()` können `null` liefern und laufen deshalb über `src/lib/jobs/db.ts`. `badge` per `npx shadcn add` ergänzt. Die Übergabe an den Lebenslauf ist verbunden (`src/app/(app)/resume/page.tsx` nutzt `getJobPostingText`).
 
 - **Übergabe an den Lebenslauf (5.2):** Feature A hält pro Nutzer drei Lebensläufe (finance, consulting, startup) und schneidet auf den Bereich zu, nicht auf eine einzelne Anzeige.
   - Der Button verlinkt auf `/resume?jobId=<id>&track=<bereich>`. A liest `track` schon heute aus der URL, damit ist der passende Lebenslauf ohne weiteren Code vorausgewählt.

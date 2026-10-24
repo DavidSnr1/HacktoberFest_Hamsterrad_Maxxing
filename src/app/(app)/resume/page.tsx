@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 
 import { ResumeStartForm, type ExistingResumes } from "@/components/resume/resume-start-form";
 import { hasConsent } from "@/lib/consent/server";
+import { getJobPostingText } from "@/lib/jobs/handoff";
 import { isProfileEmpty } from "@/lib/resume/profile";
 import { getResumeProfile } from "@/lib/resume/profile-source";
 import { listResumeDocuments } from "@/lib/resume/repository";
@@ -22,19 +23,17 @@ export default async function ResumePage({ searchParams }: PageProps<"/resume">)
   const user = await getCurrentUser();
   if (!user) notFound();
 
-  const { track } = await searchParams;
-  const initialTrack = resumeTrackSchema.safeParse(track).data;
-  // TODO(merge, TEAM-KONTEXT 5.2): hand-over from the job search (`/resume?jobId=…&track=…`).
-  //   `track` from the URL already preselects the resume; the role still needs the job:
-  //   const { jobId } = await searchParams;
-  //   const job = typeof jobId === "string" ? await getJobPostingText(jobId) : null;
-  //   <ResumeStartForm … initialRole={job?.title} initialTrack={job?.track ?? initialTrack} />
-
-  const [documents, profile, consentGranted] = await Promise.all([
+  // Hand-over from the job search (TEAM-KONTEXT 5.2): `/resume?jobId=…&track=…`.
+  // The job title becomes the role; the job's track (or the one in the URL) picks the resume.
+  const { track, jobId } = await searchParams;
+  const [documents, profile, consentGranted, job] = await Promise.all([
     listResumeDocuments(),
     getResumeProfile(user),
     hasConsent("resume"),
+    typeof jobId === "string" ? getJobPostingText(jobId) : null,
   ]);
+  const initialTrack = job?.track ?? resumeTrackSchema.safeParse(track).data;
+  const initialRole = job?.title.slice(0, 120);
   const existing: ExistingResumes = Object.fromEntries(
     documents.map((doc) => [doc.track, { id: doc.id, language: doc.language, targetRole: doc.targetRole }]),
   );
@@ -62,9 +61,10 @@ export default async function ResumePage({ searchParams }: PageProps<"/resume">)
         </div>
       ) : (
         <ResumeStartForm
-          key={initialTrack ?? "none"}
+          key={`${initialTrack ?? "none"}-${initialRole ?? ""}`}
           existing={existing}
           consentGranted={consentGranted}
+          initialRole={initialRole}
           initialTrack={initialTrack}
         />
       )}
