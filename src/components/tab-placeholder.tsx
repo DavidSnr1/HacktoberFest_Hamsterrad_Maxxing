@@ -1,14 +1,16 @@
 import type { LucideIcon } from "lucide-react";
+import type { ReactNode } from "react";
 
 type TabPlaceholderProps = {
   title: string;
   description: string;
   icon: LucideIcon;
   upcoming: string[];
+  action?: ReactNode;
 };
 
 /** Temporary content for tabs whose features are built in later steps. */
-export function TabPlaceholder({ title, description, icon: Icon, upcoming }: TabPlaceholderProps) {
+export function TabPlaceholder({ title, description, icon: Icon, upcoming, action }: TabPlaceholderProps) {
   return (
     <section className="flex flex-col gap-6">
       <header className="flex flex-col gap-1">
@@ -28,6 +30,7 @@ export function TabPlaceholder({ title, description, icon: Icon, upcoming }: Tab
             <li key={item}>{item}</li>
           ))}
         </ul>
+        {action}
       </div>
     </section>
   );

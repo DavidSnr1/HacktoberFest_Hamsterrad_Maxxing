@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { FileTextIcon } from "lucide-react";
+import { ConsentGatedAction } from "@/components/consent-gated-action";
 import { TabPlaceholder } from "@/components/tab-placeholder";
 
 export const metadata: Metadata = { title: "Lebenslauf" };
@@ -15,6 +16,14 @@ export default function ResumePage() {
         "Erfahrungen einsprechen",
         "Auf eine Stellenanzeige zuschneiden und exportieren",
       ]}
+      action={
+        <ConsentGatedAction
+          consentType="resume"
+          comingSoonMessage="Einwilligung liegt vor. Der Upload wird gerade gebaut."
+        >
+          Lebenslauf hochladen
+        </ConsentGatedAction>
+      }
     />
   );
 }
