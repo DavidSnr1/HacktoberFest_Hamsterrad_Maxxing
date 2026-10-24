@@ -33,6 +33,8 @@ export async function grantConsent(type: unknown): Promise<GrantConsentResult> {
   );
 
   if (error) {
+    // Code and message only; details can contain row values.
+    console.error(`consent: saving failed (${error.code}): ${error.message}`);
     return {
       ok: false,
       error: "Deine Einwilligung konnte nicht gespeichert werden. Bitte versuche es erneut.",

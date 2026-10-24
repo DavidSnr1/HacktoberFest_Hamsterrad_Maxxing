@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { connection } from "next/server";
 import { cache } from "react";
 import "server-only";
 import type { Database } from "./database.types";
@@ -10,7 +11,9 @@ import { getSupabasePublicEnv } from "./env";
  * Returns null if Supabase is not configured.
  */
 export async function createClient() {
-  // Read cookies first so callers are always request-time, even when unconfigured.
+  // Supabase reads the clock (token expiry) and per-user data, so everything
+  // using this client is request-time work and must not be prerendered.
+  await connection();
   const cookieStore = await cookies();
   const env = getSupabasePublicEnv();
   if (!env) return null;
