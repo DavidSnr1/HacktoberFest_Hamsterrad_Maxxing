@@ -7,7 +7,7 @@ import { mergeResults } from "../merge";
 import * as arbeitnow from "../sources/arbeitnow";
 import * as arbeitsagentur from "../sources/arbeitsagentur";
 import * as indeed from "../sources/indeed";
-import { buildMockResults } from "../sources/indeed-mock";
+import { buildMockResults, topUpWithExamples } from "../sources/indeed-mock";
 import * as linkedin from "../sources/linkedin";
 import * as stepstone from "../sources/stepstone";
 import { fixture, jsonFixture } from "./helpers";
@@ -185,13 +185,24 @@ describe("indeed mock", () => {
 
   it("takes type and track from the query when no filter is set", () => {
     const drafts = mergeResults([buildMockResults({ q: "Praktikum Consulting" }, url)], {});
-    assert.equal(drafts.length, 5);
+    assert.equal(drafts.length, 10);
     assert.ok(drafts.every((draft) => draft.employmentType === "internship" && draft.track === "consulting"));
   });
 
   it("varies the job type when none is chosen", () => {
     const drafts = mergeResults([buildMockResults({}, url)], {});
     assert.deepEqual(new Set(drafts.map((draft) => draft.employmentType)), new Set(["internship", "working_student", "entry"]));
+  });
+
+  it("tops up short result lists to the minimum, after the real postings", () => {
+    const params = { q: "Praktikum Consulting" };
+    const real = arbeitsagentur.parseSearchResponse(jsonFixture("arbeitsagentur-search.json")).slice(0, 3);
+    const fallback = buildMockResults(params, url, 5);
+    const drafts = topUpWithExamples([...real, ...fallback], params, url, 10);
+    assert.equal(drafts.length, 10);
+    assert.deepEqual(drafts.slice(0, 3), real);
+    assert.equal(new Set(drafts.map((draft) => draft.sourceId)).size, 10);
+    assert.equal(topUpWithExamples(drafts, params, url, 10), drafts);
   });
 
   it("keeps ids stable per query", () => {

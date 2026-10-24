@@ -16,10 +16,15 @@ import { SourceError } from "./http";
 import { mergeResults } from "./merge";
 import { draftToInsert, JOB_POSTING_COLUMNS, rowToPosting, type JobPostingRow } from "./repository";
 import { getEnabledSources, getSource } from "./sources";
+import { indeedMockEnabled } from "./sources/flags";
+import { buildSearchUrl as indeedSearchUrl } from "./sources/indeed";
+import { topUpWithExamples } from "./sources/indeed-mock";
 import type { JobSource } from "./sources/types";
 
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000;
 const SOURCE_TIMEOUT_MS = 10_000;
+// Decided on 2026-10-24: short result lists are topped up with labelled example postings.
+const MIN_RESULTS = 10;
 
 function cacheKey(params: JobSearchParams, sources: JobSource[]): string {
   const normalized = {
@@ -85,10 +90,11 @@ export async function searchJobs(params: JobSearchParams): Promise<JobSearchResu
     const label = demo ? `${source.label} (Beispieldaten)` : source.label;
     return { id: source.id, label, ok: true, count: outcome.value.length };
   });
-  const drafts = mergeResults(
+  const merged = mergeResults(
     settled.map((outcome) => (outcome.status === "fulfilled" ? outcome.value : [])),
     params,
   );
+  const drafts = indeedMockEnabled() ? topUpWithExamples(merged, params, indeedSearchUrl(params), MIN_RESULTS) : merged;
 
   // All drafts write the same columns, so one batch is safe (no column is filled with defaults).
   const rows: JobPostingRow[] = [];

@@ -8,12 +8,14 @@ import {
   type JobSearchParams,
   type JobTrack,
 } from "@/lib/schemas/job-posting";
+import { mergeResults } from "../merge";
 import { detectEmploymentType, detectTrack } from "../normalize";
 
-// Example postings shown while Indeed blocks our requests (see indeed.ts). They are deterministic per
-// query, use placeholder companies ("Muster …") and are stored under their own source id, so the UI
-// can label them as examples and never loads an Indeed detail page for them.
-const MOCK_COUNT = 5;
+// Example postings shown while Indeed blocks our requests (see indeed.ts) and to top up short result
+// lists (see search.ts). They are deterministic per query, use placeholder companies ("Muster …") and
+// are stored under their own source id, so the UI can label them as examples and never loads an Indeed
+// detail page for them. Index n always yields the same posting, so both callers share ids.
+const MAX_COUNT = 10;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 type MockType = Exclude<EmploymentType, "other">;
@@ -21,7 +23,7 @@ type MockType = Exclude<EmploymentType, "other">;
 const TYPE_ROTATION: MockType[] = ["internship", "working_student", "entry"];
 const LOCATIONS = ["Berlin", "München", "Frankfurt am Main", "Hamburg", "Köln"];
 
-// One company per posting (MOCK_COUNT), so postings with the same title are not merged as duplicates.
+// One company per posting (MAX_COUNT), so postings with the same title are not merged as duplicates.
 const COMPANIES: Record<JobTrack | "none", string[]> = {
   consulting: [
     "Muster Consulting GmbH",
@@ -29,6 +31,11 @@ const COMPANIES: Record<JobTrack | "none", string[]> = {
     "Muster Advisory AG",
     "Muster Strategy Partners",
     "Musterberatung GmbH",
+    "Muster Management Consultants",
+    "Muster Transformation GmbH",
+    "Muster Operations Advisory",
+    "Muster Public Sector Beratung",
+    "Muster Insights GmbH",
   ],
   finance: [
     "Musterbank AG",
@@ -36,9 +43,36 @@ const COMPANIES: Record<JobTrack | "none", string[]> = {
     "Muster Asset Management GmbH",
     "Muster Finanz AG",
     "Muster Corporate Finance GmbH",
+    "Muster Wirtschaftsprüfung GmbH",
+    "Muster Private Equity Partners",
+    "Muster Versicherung AG",
+    "Muster Treasury Services GmbH",
+    "Muster Invest AG",
   ],
-  startup: ["Muster Labs GmbH", "Musterkiez Tech GmbH", "Muster Ventures Studio GmbH", "Muster Mobility GmbH", "Musterapp GmbH"],
-  none: ["Muster Gruppe", "Muster Digital GmbH", "Muster Industries AG", "Muster Handel GmbH", "Muster Logistik AG"],
+  startup: [
+    "Muster Labs GmbH",
+    "Musterkiez Tech GmbH",
+    "Muster Ventures Studio GmbH",
+    "Muster Mobility GmbH",
+    "Musterapp GmbH",
+    "Muster Health Tech GmbH",
+    "Muster Climate GmbH",
+    "Muster Fintech GmbH",
+    "Muster Food Tech GmbH",
+    "Muster AI GmbH",
+  ],
+  none: [
+    "Muster Gruppe",
+    "Muster Digital GmbH",
+    "Muster Industries AG",
+    "Muster Handel GmbH",
+    "Muster Logistik AG",
+    "Muster Energie GmbH",
+    "Muster Automotive AG",
+    "Muster Medien GmbH",
+    "Muster Software GmbH",
+    "Muster Pharma AG",
+  ],
 };
 
 const DEFAULT_FOCUS: Record<JobTrack | "none", string[]> = {
@@ -100,7 +134,12 @@ function queryHash(params: JobSearchParams): string {
   return createHash("sha256").update(JSON.stringify(normalized)).digest("hex").slice(0, 12);
 }
 
-export function buildMockResults(params: JobSearchParams, searchUrl: string, now = new Date()): JobPostingDraft[] {
+export function buildMockResults(
+  params: JobSearchParams,
+  searchUrl: string,
+  count = MAX_COUNT,
+  now = new Date(),
+): JobPostingDraft[] {
   // Without filters, take type and track from the query ("Praktikum Consulting").
   const queryType = params.q ? detectEmploymentType(params.q) : null;
   const track = params.track ?? (params.q ? detectTrack(params.q) : null) ?? "none";
@@ -109,7 +148,7 @@ export function buildMockResults(params: JobSearchParams, searchUrl: string, now
   const hash = queryHash(params);
   const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
 
-  return Array.from({ length: MOCK_COUNT }, (_, index) => {
+  return Array.from({ length: Math.min(count, MAX_COUNT) }, (_, index) => {
     const type = params.type ?? (queryType && queryType !== "other" ? queryType : TYPE_ROTATION[index % TYPE_ROTATION.length]!);
     const focus = focuses[index % focuses.length]!;
     const company = companies[index % companies.length]!;
@@ -128,4 +167,20 @@ export function buildMockResults(params: JobSearchParams, searchUrl: string, now
       insights: emptyInsights(),
     };
   });
+}
+
+// Appends example postings after the real ones until there are `min`. The Indeed fallback may already
+// have added some; they share ids, so those are skipped.
+export function topUpWithExamples(
+  drafts: JobPostingDraft[],
+  params: JobSearchParams,
+  searchUrl: string,
+  min: number,
+): JobPostingDraft[] {
+  if (drafts.length >= min) return drafts;
+  const present = new Set(drafts.map((draft) => `${draft.source}|${draft.sourceId}`));
+  const examples = mergeResults([buildMockResults(params, searchUrl)], params).filter(
+    (draft) => !present.has(`${draft.source}|${draft.sourceId}`),
+  );
+  return [...drafts, ...examples.slice(0, min - drafts.length)];
 }

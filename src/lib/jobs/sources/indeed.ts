@@ -16,6 +16,8 @@ import type { JobDetails, JobSource } from "./types";
 // Indeed usually shows a "Security Check" to non-browser clients. The search then returns example
 // postings (indeed-mock.ts) unless JOBS_INDEED_MOCK=false, which reports the source as "blocked".
 const BASE_URL = "https://de.indeed.com";
+// Few enough that real postings from other sources stay the majority.
+const MOCK_FALLBACK_COUNT = 5;
 const STATE_MARKER = 'window.mosaic.providerData["mosaic-provider-jobcards"]=';
 
 const resultSchema = z.object({
@@ -96,7 +98,7 @@ export const indeedSource: JobSource = {
     } catch (error) {
       // No bypass of the security check: fall back to labelled example postings instead.
       if (!indeedMockEnabled()) throw error;
-      return buildMockResults(params, url);
+      return buildMockResults(params, url, MOCK_FALLBACK_COUNT);
     }
   },
   async fetchDetails({ sourceId }, { signal }) {
