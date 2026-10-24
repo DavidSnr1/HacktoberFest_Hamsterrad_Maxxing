@@ -60,16 +60,22 @@ Die übrigen Variablen (Gemini, ElevenLabs) werden in späteren Schritten gebrau
 
 ## 3. Datenbank einrichten
 
-Das Schema liegt als SQL-Migration unter `supabase/migrations/`. So spielst du es ein (ohne zusätzliche Tools):
+Das Schema liegt als SQL-Migrationen unter `supabase/migrations/`. Eingespielt werden sie mit einem Befehl:
 
-1. Im Supabase-Dashboard links **SQL Editor** öffnen, **New query**.
-2. Den kompletten Inhalt von `supabase/migrations/20261024120000_initial_schema.sql` hineinkopieren.
-3. **Run** klicken. Es sollte „Success. No rows returned" erscheinen.
-4. Kontrolle: Unter **Table Editor** gibt es jetzt die Tabellen `profiles`, `interviews`, `interview_feedback`, `resumes`, `experiences`, `tailored_resumes`, `xp_events` und `consents`, jeweils mit dem Hinweis, dass RLS aktiv ist.
+1. Datenbank-Verbindung in `.env.local` eintragen:
+   ```
+   SUPABASE_DB_URL=postgresql://postgres:DEIN_DB_PASSWORT@db.<projekt-id>.supabase.co:5432/postgres
+   ```
+   Das Datenbank-Passwort legst du unter **Project Settings → Database** fest (bei Bedarf „Reset database password"). Am besten nur Buchstaben und Ziffern verwenden, Sonderzeichen stören in der Adresse.
+2. Migrationen einspielen:
+   ```bash
+   npm run db:migrate
+   ```
+   Das Skript spielt alle noch fehlenden Migrationen in der Reihenfolge der Dateinamen ein, jede in einer eigenen Transaktion, und merkt sich in `app_private.schema_migrations`, was schon gelaufen ist. Mehrfaches Ausführen ist unbedenklich.
 
-Danach genauso `supabase/migrations/20261024150000_feedback_exercise.sql` ausführen (fügt die Spalte für den Übungsvorschlag hinzu). Migrationen immer in der Reihenfolge der Dateinamen einspielen.
+Ist die direkte Adresse (nur IPv6) aus deinem Netz nicht erreichbar, nutzt das Skript automatisch den Session Pooler von Supabase und findet die Region selbst. Alternativ lässt sich jede Datei auch von Hand im **SQL Editor** des Dashboards ausführen.
 
-Jede Migration nur **einmal** ausführen. Spätere Schema-Änderungen kommen als neue Dateien dazu und werden genauso nacheinander eingespielt.
+Kontrolle: Unter **Table Editor** gibt es die Tabellen `profiles`, `interviews`, `interview_feedback`, `resumes`, `experiences`, `tailored_resumes`, `xp_events` und `consents`, jeweils mit aktivem RLS.
 
 ### Zugriffsregeln (Row Level Security)
 

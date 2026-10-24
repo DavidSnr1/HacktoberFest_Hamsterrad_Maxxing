@@ -9,7 +9,8 @@
     "lint": "eslint",
     "db:test": "node supabase/tests/rls.test.mjs",
     "db:types": "npx supabase@latest gen types typescript --project-id \"$SUPABASE_PROJECT_ID\" --schema public > src/lib/supabase/database.types.ts",
-    "feedback:try": "tsx --conditions=react-server --env-file=.env.local scripts/try-feedback.mts"
+    "feedback:try": "tsx --conditions=react-server --env-file=.env.local scripts/try-feedback.mts",
+    "db:migrate": "node --env-file=.env.local scripts/db-migrate.mts"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
@@ -37,6 +38,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.4.3",
+    "postgres": "^3.4.9",
     "tailwindcss": "^4",
     "tsx": "^4.23.15",
     "typescript": "^5"
