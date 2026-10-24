@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Suspense } from "react";
 import { FileTextIcon, UserRoundIcon, VideoIcon, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -13,14 +14,31 @@ const TABS: Tab[] = [
   { href: "/resume", label: "Lebenslauf", icon: FileTextIcon },
 ];
 
+type NavListProps = { active?: string };
+
 function useActiveHref() {
   const pathname = usePathname();
   return TABS.find((t) => pathname === t.href || pathname.startsWith(`${t.href}/`))?.href;
 }
 
-/** Horizontal tabs in the header, visible from the md breakpoint up. */
-export function DesktopNav() {
-  const active = useActiveHref();
+/**
+ * Reading the pathname is request data. Each nav renders a static version
+ * (no active tab) into the prerendered shell and streams in the highlight.
+ */
+function withActiveHref(List: (props: NavListProps) => React.ReactNode) {
+  function Active() {
+    return <List active={useActiveHref()} />;
+  }
+  return function Nav() {
+    return (
+      <Suspense fallback={<List />}>
+        <Active />
+      </Suspense>
+    );
+  };
+}
+
+function DesktopNavList({ active }: NavListProps) {
   return (
     <nav aria-label="Hauptnavigation" className="hidden md:block">
       <ul className="flex items-center gap-1">
@@ -44,9 +62,7 @@ export function DesktopNav() {
   );
 }
 
-/** Fixed bottom tab bar for phones, hidden from the md breakpoint up. */
-export function MobileNav() {
-  const active = useActiveHref();
+function MobileNavList({ active }: NavListProps) {
   return (
     <nav
       aria-label="Hauptnavigation"
@@ -72,3 +88,9 @@ export function MobileNav() {
     </nav>
   );
 }
+
+/** Horizontal tabs in the header, visible from the md breakpoint up. */
+export const DesktopNav = withActiveHref(DesktopNavList);
+
+/** Fixed bottom tab bar for phones, hidden from the md breakpoint up. */
+export const MobileNav = withActiveHref(MobileNavList);

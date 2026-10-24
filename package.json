@@ -8,10 +8,12 @@
     "start": "next start",
     "lint": "eslint",
     "db:test": "node supabase/tests/rls.test.mjs",
-    "db:types": "npx supabase@latest gen types typescript --project-id \"$SUPABASE_PROJECT_ID\" --schema public > src/lib/supabase/database.types.ts"
+    "db:types": "npx supabase@latest gen types typescript --project-id \"$SUPABASE_PROJECT_ID\" --schema public > src/lib/supabase/database.types.ts",
+    "prompt": "node scripts/print-prompt.mts"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
+    "@elevenlabs/react": "^1.19.1",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.118.0",
     "class-variance-authority": "^0.7.1",
