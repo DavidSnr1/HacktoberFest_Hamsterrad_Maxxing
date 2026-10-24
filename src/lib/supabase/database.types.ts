@@ -69,6 +69,7 @@ export type Database = {
       interview_feedback: {
         Row: {
           created_at: string
+          exercise: string
           id: string
           improvements: string[]
           interview_id: string
@@ -78,6 +79,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          exercise?: string
           id?: string
           improvements?: string[]
           interview_id: string
@@ -87,6 +89,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          exercise?: string
           id?: string
           improvements?: string[]
           interview_id?: string

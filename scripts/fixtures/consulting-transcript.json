@@ -1,0 +1,23 @@
+[
+  { "role": "interviewer", "text": "Hallo und herzlich willkommen! Mein Name ist Lena Hartmann, ich bin Principal bei uns in der Strategieberatung. Können Sie mich gut hören?", "at": 0 },
+  { "role": "candidate", "text": "Ja, ich höre Sie gut. Vielen Dank für die Einladung.", "at": 8 },
+  { "role": "interviewer", "text": "Schön. Wir starten mit ein paar Fragen zu Ihrer Person und machen danach einen kurzen Case. Warum möchten Sie in die Beratung?", "at": 14 },
+  { "role": "candidate", "text": "Also, ähm, ich finde Beratung halt sehr spannend, weil man viele verschiedene Branchen sieht. Und ich lerne gerne schnell Neues. In meinem Praktikum bei einem Autozulieferer habe ich gemerkt, dass mir strukturierte Problemlösung Spaß macht.", "at": 22 },
+  { "role": "interviewer", "text": "Was genau haben Sie in dem Praktikum gemacht?", "at": 48 },
+  { "role": "candidate", "text": "Ich war im Einkauf und habe eine Analyse der Lieferantenkosten gemacht. Wir hatten über 200 Lieferanten und ich habe die nach Volumen und Preisentwicklung sortiert. Daraus haben wir drei Lieferanten für Nachverhandlungen ausgewählt und am Ende etwa 4 Prozent bei diesen Teilen gespart.", "at": 53 },
+  { "role": "interviewer", "text": "Erzählen Sie mir von einer Situation, in der Sie ein Team geführt haben.", "at": 85 },
+  { "role": "candidate", "text": "Ähm, ja, in der Uni hatten wir ein Gruppenprojekt, da war ich quasi so die Koordinatorin. Wir waren fünf Leute und irgendwie hat am Anfang keiner Verantwortung übernommen. Ich habe dann einen Zeitplan gemacht und die Aufgaben verteilt. Wir haben dann eine 1,3 bekommen.", "at": 92 },
+  { "role": "interviewer", "text": "Gab es dabei Konflikte im Team?", "at": 120 },
+  { "role": "candidate", "text": "Ja, einer hat seine Teile immer zu spät abgegeben. Ich habe dann mit ihm gesprochen und wir haben ausgemacht, dass er früher Zwischenstände schickt. Das hat dann eigentlich ganz gut funktioniert.", "at": 124 },
+  { "role": "interviewer", "text": "Danke. Kommen wir zum Case. Unser Kunde ist FitWerk, eine Fitnessstudio-Kette mit 40 Studios in Deutschland. Der Gewinn ist in den letzten zwei Jahren deutlich gesunken. Wie würden Sie an das Problem herangehen?", "at": 150 },
+  { "role": "candidate", "text": "Okay, Gewinn ist ja Umsatz minus Kosten. Ich würde mir also zuerst den Umsatz anschauen, also Anzahl Mitglieder mal Beitrag, und dann die Kosten, also fixe Kosten wie Miete und Personal und variable Kosten wie Energie. Gibt es Daten zum Umsatz?", "at": 165 },
+  { "role": "interviewer", "text": "Der Umsatz lag vor zwei Jahren bei 48 Millionen Euro, heute bei 44 Millionen Euro. Die Mitglieder sind von 80.000 auf 88.000 gestiegen.", "at": 190 },
+  { "role": "candidate", "text": "Interessant, also mehr Mitglieder aber weniger Umsatz. Dann muss der Durchschnittsbeitrag gesunken sein. 48 Millionen durch 80.000 sind 600 Euro im Jahr, also 50 Euro im Monat. Heute 44 Millionen durch 88.000, das sind 500 Euro im Jahr, also etwa 41,70 Euro im Monat. Der Beitrag ist also um ungefähr 17 Prozent gesunken.", "at": 200 },
+  { "role": "interviewer", "text": "Was könnte der Grund dafür sein?", "at": 240 },
+  { "role": "candidate", "text": "Vielleicht Rabattaktionen oder günstigere Konkurrenz. Und wie sieht es mit den Kosten aus?", "at": 244 },
+  { "role": "interviewer", "text": "Die Kosten sind von 40 auf 42 Millionen Euro gestiegen, fast vollständig durch Energiekosten. Was empfehlen Sie dem CEO?", "at": 252 },
+  { "role": "candidate", "text": "Der Gewinn ist also von 8 auf 2 Millionen gefallen. Ich würde dem CEO empfehlen, die Rabattaktionen zu überprüfen und eher auf Mitgliederbindung zu setzen, und bei den Energiekosten zum Beispiel über langfristige Verträge oder Solaranlagen nachzudenken.", "at": 262 },
+  { "role": "interviewer", "text": "Vielen Dank. Haben Sie noch Fragen an uns?", "at": 300 },
+  { "role": "candidate", "text": "Ja, wie sieht die Einarbeitung für Berufseinsteiger bei Ihnen aus?", "at": 305 },
+  { "role": "interviewer", "text": "Sie starten mit einem zweiwöchigen Training und haben danach einen festen Mentor. Vielen Dank für das Gespräch und alles Gute!", "at": 310 }
+]

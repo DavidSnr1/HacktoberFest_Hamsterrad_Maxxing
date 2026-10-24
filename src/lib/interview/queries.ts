@@ -15,3 +15,16 @@ export async function getInterview(id: string) {
     .maybeSingle();
   return data;
 }
+
+/** Loads the stored feedback of one of the user's interviews (RLS-scoped), or null. */
+export async function getInterviewFeedback(interviewId: string) {
+  const supabase = await createClient();
+  if (!supabase) return null;
+
+  const { data } = await supabase
+    .from("interview_feedback")
+    .select("scores, strengths, improvements, exercise, summary, created_at")
+    .eq("interview_id", interviewId)
+    .maybeSingle();
+  return data;
+}

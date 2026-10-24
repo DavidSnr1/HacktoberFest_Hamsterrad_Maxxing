@@ -305,7 +305,10 @@ function Room({ interviewId, track }: InterviewRoomProps) {
 
   if (phase.kind === "saving") {
     return (
-      <StatusCard title="Interview wird gespeichert" message="Einen Moment, dein Transkript wird gesichert …">
+      <StatusCard
+        title="Interview wird gespeichert"
+        message="Einen Moment, dein Transkript wird gesichert …"
+      >
         <Loader2Icon className="size-6 animate-spin text-muted-foreground" aria-hidden />
       </StatusCard>
     );

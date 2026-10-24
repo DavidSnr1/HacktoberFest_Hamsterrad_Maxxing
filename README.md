@@ -9,7 +9,7 @@ Stack: Next.js 16 (App Router, TypeScript), Tailwind CSS 4, shadcn/ui, Supabase 
 - [x] Schritt 1 – Grundgerüst: Navigation, Login per Magic Link, geschützte Routen
 - [x] Schritt 2 – Datenbank: Tabellen mit Row Level Security, Einwilligungs-Dialog
 - [x] Schritt 3 – Interview-Prototyp (Consulting): Track-Auswahl, Live-Interview mit ElevenLabs, Transkript
-- [ ] Schritt 4 – Feedback
+- [x] Schritt 4 – Feedback: Auswertung mit Gemma 4 nach Raster, Feedback-Seite, XP
 - [ ] Schritt 5 – Weitere Tracks
 - [ ] Schritt 6 – Lebenslauf-Tab
 - [ ] Schritt 7 – Charakter-Tab
@@ -66,7 +66,9 @@ Das Schema liegt als SQL-Migration unter `supabase/migrations/`. So spielst du e
 3. **Run** klicken. Es sollte „Success. No rows returned" erscheinen.
 4. Kontrolle: Unter **Table Editor** gibt es jetzt die Tabellen `profiles`, `interviews`, `interview_feedback`, `resumes`, `experiences`, `tailored_resumes`, `xp_events` und `consents`, jeweils mit dem Hinweis, dass RLS aktiv ist.
 
-Die Migration nur **einmal** ausführen. Spätere Schema-Änderungen kommen als neue Dateien dazu und werden genauso nacheinander eingespielt.
+Danach genauso `supabase/migrations/20261024150000_feedback_exercise.sql` ausführen (fügt die Spalte für den Übungsvorschlag hinzu). Migrationen immer in der Reihenfolge der Dateinamen einspielen.
+
+Jede Migration nur **einmal** ausführen. Spätere Schema-Änderungen kommen als neue Dateien dazu und werden genauso nacheinander eingespielt.
 
 ### Zugriffsregeln (Row Level Security)
 
@@ -125,12 +127,33 @@ src/
   lib/prompts/                # Interviewer-Prompts (werden ins ElevenLabs-Dashboard kopiert)
   lib/schemas/                # Zod-Schemas für API-Eingaben
   lib/elevenlabs.ts           # Signed URLs für die Agenten (nur serverseitig)
+  lib/llm.ts                  # einzige Schicht für Gemma-4-Aufrufe
+  lib/gamification/xp.ts      # XP-Regeln und Vergabe
   components/interview/       # Interview-Raum im Video-Call-Look
   app/api/                    # API-Routen (Interview anlegen/beenden, Signed URL)
 supabase/
   migrations/                 # SQL-Migrationen (Schema + RLS)
   tests/                      # Test der Migrationen (npm run db:test)
 ```
+
+## KI-Feedback (Gemma 4)
+
+Nach einem Interview bewertet Gemma 4 das Transkript nach einem Raster (Skala 1–5): Struktur, inhaltliche Tiefe, Überzeugungskraft, Sprechweise und ein Track-Kriterium (Consulting: Case-Struktur). Dazu kommen 3 Stärken, 3 Verbesserungen und ein Übungsvorschlag.
+
+- **Ablauf:** Beim Beenden wird das Transkript sofort gespeichert. Die Auswertung läuft danach im Hintergrund (1–3 Minuten). Die Feedback-Seite zeigt so lange „Auswertung wird erstellt" und aktualisiert sich selbst. Klappt es nicht, gibt es einen Button für einen neuen Versuch.
+- **Modelle:** Zuerst `LLM_MODEL_QUALITY` (Gemma 4 31B). Antwortet es nicht oder zu langsam, springt automatisch `LLM_MODEL_LIVE` (Gemma 4 26B) ein. Alle Aufrufe laufen über `src/lib/llm.ts`.
+- **Gegen Erfindungen:** Zitate werden gegen das Transkript geprüft; nicht wörtlich vorhandene Zitate führen zu einem neuen Versuch. Den Gesamtscore berechnet die App selbst als gewichteten Durchschnitt.
+- **Voraussetzungen:** `GEMINI_API_KEY` und `SUPABASE_SERVICE_ROLE_KEY` in `.env.local` (Feedback und XP darf nur der Server schreiben).
+- **Raster anpassen:** in `src/lib/prompts/feedback-rubrics.ts` (Beschreibungen, Anker, Gewichte). Bei Änderungen `RUBRIC_VERSION` erhöhen.
+- **Ausprobieren ohne Interview:**
+
+  ```bash
+  npm run feedback:try
+  ```
+
+  Wertet das Beispiel-Transkript `scripts/fixtures/consulting-transcript.json` mit den echten Modellen aus und gibt das Ergebnis aus. Nichts wird gespeichert. Mit eigenem Transkript: `npm run feedback:try -- pfad/zur/datei.json consulting`.
+
+> Datenschutz: Im kostenlosen Tarif der Gemini API darf Google gesendete Inhalte zur Produktverbesserung nutzen. Vor dem Einsatz mit echten Nutzern in Google AI Studio die Abrechnung aktivieren (bezahlter Tarif) und die aktuellen Nutzungsbedingungen prüfen.
 
 ## Einwilligungen (DSGVO)
 

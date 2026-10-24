@@ -83,6 +83,7 @@ r = await as("service_role", null, `insert into xp_events (user_id, type, amount
 check("duplicate XP for same item is rejected", Boolean(r.error));
 r = await as("authenticated", A, `select * from interview_feedback`);
 check("A can read own feedback", r.rows?.length === 1);
+check("feedback has an exercise column (default '')", r.rows?.[0]?.exercise === "");
 r = await as("authenticated", B, `select * from interview_feedback`);
 check("B cannot read A's feedback", r.rows?.length === 0);
 r = await as("authenticated", A, `select sum(amount)::int as xp from xp_events`);
