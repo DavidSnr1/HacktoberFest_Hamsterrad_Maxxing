@@ -226,3 +226,8 @@ Tests: `npm run test:resume` (Logik) und `npm run db:test:resume` (RLS).
 Tab „Stellen“ (`/jobs`): sucht Praktika, Werkstudentenjobs und Einstiegsstellen bei der Bundesagentur für Arbeit
 und Arbeitnow (optional Adzuna), dazu LinkedIn, Indeed und StepStone (abschaltbar mit `JOBS_ENABLE_SCRAPED_SOURCES=false`).
 Tests: `npm run test:jobs`, `npm run db:test:jobs`. Details: `docs/handoff/job-scraper.md`.
+
+## Charakter (Gamification)
+
+Tab „Charakter“ (`/character`): Avatar, Level 1–5 (ab 0 / 201 / 501 / 1.001 / 1.801 XP), XP-Balken, Streak, CV-Meilensteine, Badges, letzte XP und alle 15 Personas. XP und Level werden aus `xp_events` berechnet; geschrieben wird nur serverseitig über `awardXp`. Der Look folgt dem ersten Bereich im Profil (Consulting, Finance oder Startup).
+Tests: `npx tsx --conditions=react-server --test "src/lib/gamification/*.test.ts"`. Details: `docs/handoff/gamification.md`.

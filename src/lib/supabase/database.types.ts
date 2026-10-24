@@ -289,16 +289,19 @@ export type Database = {
           created_at: string
           display_name: string | null
           id: string
+          last_seen_level: number | null
         }
         Insert: {
           created_at?: string
           display_name?: string | null
           id: string
+          last_seen_level?: number | null
         }
         Update: {
           created_at?: string
           display_name?: string | null
           id?: string
+          last_seen_level?: number | null
         }
         Relationships: []
       }
@@ -513,6 +516,8 @@ export type Database = {
         | "experience_recorded"
         | "daily_streak"
         | "profile_completed"
+        | "milestone"
+        | "interview_bonus"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -634,6 +639,8 @@ export const Constants = {
         "experience_recorded",
         "daily_streak",
         "profile_completed",
+        "milestone",
+        "interview_bonus",
       ],
     },
   },

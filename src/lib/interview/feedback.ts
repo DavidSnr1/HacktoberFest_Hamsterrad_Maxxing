@@ -1,5 +1,5 @@
 import "server-only";
-import { awardXp, feedbackScoreXp } from "@/lib/gamification/xp";
+import { awardXp, feedbackScoreXp, INTERVIEW_BONUS_MIN_SCORE, XP_REWARDS } from "@/lib/gamification/xp";
 import { generateJson, LlmError, type LlmUsage } from "@/lib/llm";
 import { getRubric, type Rubric } from "@/lib/prompts/feedback-rubrics";
 import { buildFeedbackPrompt, feedbackSystemPrompt } from "@/lib/prompts/interview-feedback";
@@ -149,6 +149,9 @@ export async function generateAndStoreFeedback(interview: InterviewForFeedback):
 
   if (result.scores.overall !== null) {
     await awardXp(interview.user_id, "feedback_score", feedbackScoreXp(result.scores.overall), interview.id);
+    if (result.scores.overall > INTERVIEW_BONUS_MIN_SCORE) {
+      await awardXp(interview.user_id, "interview_bonus", XP_REWARDS.interviewBonus, interview.id);
+    }
   }
   // Token counts only, no content (cost overview follows in step 8).
   console.info(

@@ -1,0 +1,150 @@
+/*
+ * Cartoon figure from the NextStep prototype, drawn at 230x348 px and scaled
+ * by the component. Colors come in as custom properties (--skin, --hair,
+ * --shirt, --jacket, --pants, --tie, --cuff, --vest, --sleeve).
+ * Plain global CSS with an "av-" prefix: next.config.ts loads every *.css
+ * through the Tailwind loader as plain CSS, so CSS modules are not available.
+ */
+
+.av-frame { position: relative; }
+.av-figure {
+  position: absolute; top: 0; left: 0; width: 230px; height: 348px;
+  transform-origin: top left;
+}
+.av-float { animation: av-float-motion 3.6s ease-in-out infinite; }
+.av-level-up { animation: av-level-up-motion 0.9s ease-out 2; }
+@keyframes av-float-motion { 0%, 100% { translate: 0 0; } 50% { translate: 0 -7px; } }
+@keyframes av-level-up-motion { 40% { scale: 1.08; filter: drop-shadow(0 0 14px #e3c46f); } }
+
+.av-head {
+  position: absolute; z-index: 5; width: 91px; height: 105px; top: 19px; left: 69px;
+  border-radius: 45% 45% 42% 42%; overflow: hidden; background: var(--skin);
+  box-shadow: inset -7px -8px 0 #633d2912, inset 5px 5px 0 #fff2;
+  border: 2px solid #563b3030;
+}
+.av-hair {
+  position: absolute; top: -8px; left: -3px; width: 99px; height: 45px;
+  border-radius: 55% 54% 24% 20%;
+  background: linear-gradient(145deg, #ffffff20, transparent 40%), var(--hair);
+  transform: rotate(-4deg);
+}
+.av-hair::after {
+  content: ""; position: absolute; width: 24px; height: 45px; right: -5px; top: 23px;
+  border-radius: 50%; background: var(--hair);
+}
+.av-hair1 { height: 37px; width: 94px; }
+.av-hair2 { height: 42px; width: 101px; transform: rotate(-7deg); }
+.av-hair3 { height: 48px; width: 106px; top: -10px; transform: rotate(2deg); }
+.av-hair3::after { height: 54px; width: 29px; right: -3px; top: 19px; }
+.av-hair4 { height: 38px; width: 103px; top: -6px; transform: rotate(-2deg); border-radius: 58% 52% 18% 16%; }
+.av-hair4::after { height: 48px; top: 20px; }
+.av-hair5 { height: 53px; width: 108px; top: -13px; transform: rotate(-5deg); border-radius: 55% 54% 25% 18%; }
+.av-hair5::after { height: 58px; width: 30px; top: 18px; }
+
+.av-eye { position: absolute; top: 49px; left: 23px; width: 7px; height: 8px; border-radius: 50%; background: #372821; box-shadow: 37px 0 #372821; }
+.av-eye::after { content: ""; position: absolute; top: 1px; left: 2px; width: 2px; height: 2px; border-radius: 50%; background: white; box-shadow: 37px 0 white; }
+.av-nose { position: absolute; top: 50px; left: 43px; height: 17px; border-left: 1.5px solid #9e6d53; transform: rotate(7deg); }
+.av-mouth { position: absolute; top: 73px; left: 36px; width: 17px; height: 7px; border-bottom: 1.5px solid #8f554a; border-radius: 50%; }
+.av-neck { position: absolute; z-index: 2; top: 112px; left: 99px; width: 32px; height: 38px; background: var(--skin); }
+
+.av-body { position: absolute; z-index: 3; top: 136px; left: 28px; width: 174px; height: 165px; }
+.av-shirt {
+  position: absolute; left: 53px; top: 0; width: 70px; height: 139px;
+  background: linear-gradient(90deg, #00000012, #ffffff14 48%, #00000008), var(--shirt);
+  clip-path: polygon(20% 0, 80% 0, 100% 100%, 0 100%);
+}
+.av-jacket {
+  position: absolute; inset: 0;
+  background: linear-gradient(105deg, #00000020, #ffffff0a 48%, #00000012), var(--jacket);
+  clip-path: polygon(22% 0, 36% 0, 50% 18%, 64% 0, 78% 0, 100% 18%, 88% 100%, 12% 100%, 0 18%);
+  border-radius: 13px 13px 0 0;
+}
+.av-hoodie { clip-path: polygon(21% 0, 79% 0, 100% 18%, 88% 100%, 12% 100%, 0 18%); }
+.av-lapel { position: absolute; top: 0; left: 59px; width: 28px; height: 71px; z-index: 2; background: #ffffff28; clip-path: polygon(0 0, 100% 0, 74% 100%, 0 48%); }
+.av-lapel-right { left: 88px; transform: scaleX(-1); background: #00000012; }
+.av-tie { position: absolute; z-index: 3; top: 23px; left: 82px; width: 12px; height: 69px; background: var(--tie); clip-path: polygon(50% 0, 100% 12%, 65% 100%, 35% 100%, 0 12%); }
+.av-tie-short { height: 45px; }
+.av-tie-pin { position: absolute; z-index: 4; top: 75px; left: 87px; width: 8px; height: 8px; border: 2px solid #fff; border-radius: 50%; background: #d6b66a; }
+.av-waistcoat {
+  position: absolute; z-index: 2; top: 2px; left: 56px; width: 62px; height: 116px;
+  background: linear-gradient(90deg, #0003, #ffffff15 45%, #0003), var(--vest);
+  clip-path: polygon(18% 0, 36% 0, 50% 13%, 64% 0, 82% 0, 100% 100%, 0 100%);
+  filter: drop-shadow(0 2px 2px #1115);
+}
+.av-waistcoat::before, .av-waistcoat::after { content: ""; position: absolute; top: 18px; width: 1px; height: 82px; background: #ffffff55; }
+.av-waistcoat::before { left: 30px; transform: rotate(8deg); }
+.av-waistcoat::after { left: 39px; transform: rotate(-8deg); }
+.av-hood {
+  position: absolute; z-index: 0; top: -8px; left: 48px; width: 80px; height: 63px;
+  border: 9px solid var(--jacket); border-radius: 46% 46% 38% 38%; box-shadow: inset 0 0 0 3px #ffffff18;
+}
+.av-lanyard {
+  position: absolute; z-index: 6; top: 2px; left: 70px; width: 37px; height: 88px;
+  border-left: 2px solid #d8b868; border-right: 2px solid #d8b868;
+  clip-path: polygon(0 0, 100% 0, 83% 76%, 50% 100%, 17% 76%);
+}
+.av-lanyard-card {
+  position: absolute; z-index: 7; top: 76px; left: 82px; width: 22px; height: 29px; border: 2px solid #fff;
+  border-radius: 3px; background: linear-gradient(#e9f1f8 34%, #55759c 35%); box-shadow: 0 2px 4px #0003;
+}
+
+.av-arms { position: absolute; z-index: 2; top: 147px; left: 10px; width: 210px; height: 118px; }
+.av-arm { position: absolute; width: 37px; height: 118px; border-radius: 24px; background: var(--sleeve, var(--jacket)); transform: rotate(9deg); }
+.av-arm-right { right: 0; transform: rotate(-9deg); }
+.av-hand { position: absolute; bottom: -10px; left: 8px; width: 25px; height: 34px; border-radius: 12px; background: var(--skin); }
+.av-arm-right .av-hand { left: 4px; }
+.av-cuff { position: absolute; z-index: 4; top: 245px; width: 38px; height: 15px; border: 3px solid #fff; border-radius: 5px; background: var(--cuff); }
+.av-cuff-left { left: 10px; transform: rotate(9deg); }
+.av-cuff-right { right: 10px; transform: rotate(-9deg); }
+
+.av-legs { position: absolute; z-index: 1; top: 276px; left: 64px; display: flex; gap: 8px; }
+.av-leg { position: relative; width: 48px; height: 58px; background: var(--pants); }
+.av-shoe { position: absolute; top: 51px; left: -9px; width: 59px; height: 18px; border-radius: 14px 8px 5px 5px; background: #262a28; }
+.av-leg + .av-leg .av-shoe { left: -2px; }
+
+.av-item { position: absolute; z-index: 8; pointer-events: none; }
+.av-glasses { top: 56px; left: 72px; width: 83px; height: 20px; border-top: 2px solid #313731; }
+.av-glasses::before, .av-glasses::after { content: ""; position: absolute; top: -1px; width: 32px; height: 17px; border: 2px solid #313731; border-radius: 7px; background: #dce4dc38; }
+.av-glasses::before { left: 0; }
+.av-glasses::after { right: 0; }
+.av-coffee { width: 28px; height: 31px; right: 3px; top: 222px; border-radius: 4px 4px 9px 9px; background: #efe1cd; border: 2px solid #c8b59b; transform: rotate(7deg); }
+.av-coffee::after { content: ""; position: absolute; right: -9px; top: 5px; width: 8px; height: 12px; border: 2px solid #c8b59b; border-left: 0; border-radius: 0 8px 8px 0; }
+.av-laptop { width: 64px; height: 48px; right: -11px; top: 190px; border: 4px solid #414b45; border-radius: 5px; background: linear-gradient(145deg, #e7f0d8, #adc493); transform: rotate(8deg); box-shadow: 0 2px 5px #0003; }
+.av-laptop::after { content: ""; position: absolute; width: 76px; height: 6px; bottom: -11px; left: -10px; border-radius: 4px; background: #414b45; }
+.av-laptop::before { content: ""; position: absolute; top: 5px; left: 7px; width: 8px; height: 8px; border-radius: 2px; background: #84a6d3; box-shadow: 14px 5px #f0bd71, 27px 0 #d78487; }
+.av-bottle {
+  right: -3px; top: 178px; width: 37px; height: 75px; border: 2px solid #b7b8ad;
+  border-radius: 11px 11px 13px 13px; background: linear-gradient(90deg, #ffffffc7, #dce5d0 48%, #ffffffa0);
+  box-shadow: inset 0 -8px #7e977c33, 1px 4px 7px #0002; transform: rotate(8deg);
+}
+.av-bottle::before { content: ""; position: absolute; top: -11px; left: 9px; width: 15px; height: 10px; border: 2px solid #77796f; border-bottom: 0; border-radius: 5px 5px 0 0; background: #f4f1e8; }
+.av-bottle::after { content: ""; position: absolute; top: -18px; left: 16px; width: 3px; height: 13px; border-radius: 3px; background: #a9aaa2; }
+.av-bottle-label { position: absolute; top: 29px; left: 4px; width: 25px; height: 18px; border-radius: 4px; background: #8aa27c; }
+.av-racket { top: 154px; right: -18px; width: 57px; height: 115px; transform: rotate(24deg); }
+.av-racket::before {
+  content: ""; position: absolute; top: 0; left: 3px; width: 47px; height: 60px;
+  border: 5px solid #34443d; border-radius: 50%;
+  background: repeating-linear-gradient(0deg, transparent 0 6px, #ffffffaa 7px), repeating-linear-gradient(90deg, transparent 0 6px, #ffffffaa 7px), #dce9d2;
+  box-shadow: inset 0 0 0 2px #fff8, 1px 2px 3px #0003;
+}
+.av-racket::after { content: ""; position: absolute; top: 52px; left: 23px; width: 9px; height: 63px; border: 2px solid #503e30; border-radius: 4px 4px 7px 7px; background: linear-gradient(90deg, #bd926c, #e5c59e, #a57955); }
+.av-paddle { top: 199px; left: -5px; width: 34px; height: 62px; transform: rotate(-24deg); }
+.av-paddle::before { content: ""; position: absolute; top: 0; left: 0; width: 33px; height: 38px; border: 3px solid #fff; border-radius: 48% 48% 44% 44%; background: linear-gradient(135deg, #ed7167 0 48%, #d94f49 49%); box-shadow: 0 2px 4px #0003; }
+.av-paddle::after { content: ""; position: absolute; top: 34px; left: 13px; width: 8px; height: 29px; border-radius: 3px; background: #c7976d; box-shadow: inset 1px 0 #fff7; }
+.av-briefcase {
+  right: -18px; top: 236px; width: 62px; height: 46px;
+  border: 3px solid #393a3d; border-radius: 6px; background: linear-gradient(100deg, #734b37, #a27452);
+  box-shadow: 1px 4px 7px #0003; transform: rotate(-7deg);
+}
+.av-briefcase::before { content: ""; position: absolute; top: -11px; left: 17px; width: 20px; height: 10px; border: 3px solid #393a3d; border-bottom: 0; border-radius: 5px 5px 0 0; }
+.av-briefcase::after { content: ""; position: absolute; top: 0; bottom: 0; left: 26px; width: 3px; background: #d6b66a; }
+.av-notebook {
+  left: -13px; top: 202px; width: 34px; height: 48px;
+  border: 3px solid #4c435d; border-radius: 4px; background: repeating-linear-gradient(#fff 0 8px, #c8bde0 9px);
+  transform: rotate(-11deg); box-shadow: 1px 3px 5px #0003;
+}
+.av-watch { z-index: 5; top: 235px; right: 28px; width: 23px; height: 23px; border: 5px solid #443d36; border-radius: 50%; background: #e9cb78; box-shadow: 0 0 0 2px #fff9; }
+
+@media (prefers-reduced-motion: reduce) {
+  .av-float, .av-level-up { animation: none; }
+}
